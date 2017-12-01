@@ -89,16 +89,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DotNetUitilities.cpp" />
-    <ClCompile Include="meshForm.cpp" />
     <ClCompile Include="Mesh\GLCamera.cc" />
     <ClCompile Include="Mesh\GUA_OM.cpp" />
     <ClCompile Include="MyForm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DotNetUtilities.h" />
-    <ClInclude Include="meshForm.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
     <ClInclude Include="Mesh\GUA_OM.h" />
     <ClInclude Include="MyForm.h">
       <FileType>CppForm</FileType>

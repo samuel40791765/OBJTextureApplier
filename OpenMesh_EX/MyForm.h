@@ -242,18 +242,30 @@ private: System::Void panel_Paint(System::Object^  sender, System::Windows::Form
 	glMatrixMode(GL_MODELVIEW);
 	glMultMatrixd((double *)xf);
 
-	glColor3f(0, 0, 255);
+	
 	for (int i = 0; i < pnts.size(); i++) {
 		point out[3];
 		for (int j = 0; j < 3; j++)
 			out[j] = xf * pnts[i][j];
+		glColor3f(0, 0, 255);
 		glBegin(GL_TRIANGLES);
 		glVertex3f(out[0][0], out[0][1], out[0][2] + 0.0001);
 		glVertex3f(out[1][0], out[1][1], out[1][2] + 0.0001);
 		glVertex3f(out[2][0], out[2][1], out[2][2] + 0.0001);
 		glEnd();
-	}
 
+		glLineWidth(1.0);
+		glColor3f(0.0, 0.0, 0.0);
+		glBegin(GL_LINES);
+		glVertex3f(out[0][0], out[0][1], out[0][2]);
+		glVertex3f(out[1][0], out[1][1], out[1][2]);
+		glVertex3f(out[1][0], out[1][1], out[1][2]);
+		glVertex3f(out[2][0], out[2][1], out[2][2]);
+		glVertex3f(out[2][0], out[2][1], out[2][2]);
+		glVertex3f(out[0][0], out[0][1], out[0][2]);
+		glEnd();
+	}
+	
 }
 
 private: System::Void hkoglPanelControl1_Paint(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e)
