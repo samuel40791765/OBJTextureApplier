@@ -667,23 +667,17 @@ namespace OpenMesh_EX {
 		OMT::VertexHandle heh, heh_init;
 		std::cout << plane->faces_end() << std::endl;
 		for (OMT::VIter v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it) {
-			std::cout << plane->point(v_it.handle()).data()[0] << " " << plane->point(v_it.handle()).data()[1] << " " << plane->point(v_it.handle()).data()[2] << std::endl;
+			std::cout <<"start: "<< plane->point(v_it.handle()).data()[0] << " " << plane->point(v_it.handle()).data()[1] << " " << plane->point(v_it.handle()).data()[2] << std::endl;
 			heh = heh_init = v_it.handle();
-			bool notbound = false;
-			for (OMT::VOHEIter voh_it = plane->voh_iter(heh); voh_it; ++voh_it) {
-				if (plane->is_boundary(heh_init)) {
-					notbound = true;
-				}
-			}
-			if (notbound)
+			if (plane->is_boundary(heh_init)) 
 				break;
 		}
 		//!((plane->is_boundary(plane->halfedge_handle(voh_it)) && plane->is_boundary(plane->opposite_halfedge_handle(plane->halfedge_handle(voh_it))))) ||
-		for (OMT::VOHEIter voh_it = plane->voh_iter(heh); voh_it; ++voh_it) {
+		for (OMT::VOHEIter voh_it = plane->voh_iter(heh_init); voh_it; ++voh_it) {
 			// Iterate over all outgoing halfedges...
-			heh = plane->to_vertex_handle(voh_it);
-			if (plane->is_boundary(heh)) {
-				std::cout << plane->point(plane->to_vertex_handle(voh_it))[0] << " " << plane->point(plane->to_vertex_handle(voh_it))[1] << " " << plane->point(plane->to_vertex_handle(voh_it))[2] << std::endl;
+			if (plane->is_boundary(plane->to_vertex_handle(voh_it))) {
+				heh = plane->to_vertex_handle(voh_it);
+				std::cout << "second: " << plane->point(plane->to_vertex_handle(voh_it))[0] << " " << plane->point(plane->to_vertex_handle(voh_it))[1] << " " << plane->point(plane->to_vertex_handle(voh_it))[2] << std::endl;
 				outerpnts.push_back(heh);
 				break;
 			}
@@ -699,9 +693,10 @@ namespace OpenMesh_EX {
 						break;
 					}
 				}
-				heh = plane->to_vertex_handle(voh_it);
-				if ((plane->is_boundary(heh))
-					&& !exists) {				
+				if ((plane->is_boundary(plane->to_vertex_handle(voh_it)))
+					&& !exists) {		
+					heh = plane->to_vertex_handle(voh_it);
+					std::cout << plane->point(plane->to_vertex_handle(voh_it))[0] << " " << plane->point(plane->to_vertex_handle(voh_it))[1] << " " << plane->point(plane->to_vertex_handle(voh_it))[2] << std::endl;
 					outerpnts.push_back(heh);
 					break;
 				}
