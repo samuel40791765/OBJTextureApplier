@@ -1,5 +1,4 @@
 #pragma once
-
 #include "DotNetUtilities.h"
 #include "Mesh/GUA_OM.h"
 #include "Mesh/DP.h"
@@ -7,9 +6,9 @@
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 #include <OpenMesh/Tools/Utils/getopt.h>
-
 #include <vector>
 #include <Eigen\Sparse>
+
 #define PI 3.14159265
 
 using namespace Eigen;
@@ -48,7 +47,8 @@ namespace OpenMesh_EX {
 	std::vector<OMT::VHandle> innerpnts;
 	std::vector<std::vector<double>> weights;
 	Mouse::button Mouse_State = Mouse::ROTATE;
-
+	
+	
 	/// <summary>
 	/// MyForm ªººK­n
 	/// </summary>
@@ -264,7 +264,7 @@ namespace OpenMesh_EX {
 		glMatrixMode(GL_MODELVIEW);
 		glMultMatrixd((double *)xfpanel);
 		if (plane != NULL) {
-			plane->Render_SolidWireframe();
+			//plane->Render_SolidWireframe();
 			setOuterPoints();
 			setWeight();
 			Parameterize();
@@ -280,6 +280,51 @@ namespace OpenMesh_EX {
 			}
 			std::cout << std::endl;
 			//turn the points around the faces into Viterators
+
+			glDisable(GL_LIGHTING);
+			glPushAttrib(GL_LIGHTING_BIT);
+			glEnable(GL_POLYGON_OFFSET_FILL);
+			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_TEXTURE_2D);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+			glPolygonOffset(2.0, 2.0);
+			glBegin(GL_TRIANGLES);
+			glColor4f(1.0, 0.96, 0.49, 1.0);
+			glBindTexture(GL_TEXTURE_2D, plane->texture);
+			//std::cout << "mouse in GUA_OM:" << clickPoint[0] << " " << clickPoint[1] << " " << clickPoint[2] << std::endl;
+			for (OMT::FIter f_it = plane->faces_begin(); f_it != plane->faces_end(); ++f_it)
+			{
+				OMT::Point p[3];
+				OMT::Point t[3];
+				int i = 0;
+				for (OMT::FVIter fv_it = plane->fv_iter(f_it); fv_it; ++fv_it)
+				{
+
+					//glNormal3dv(normal(fv_it.handle()));
+					for (int j = 0; j < 3; j++) {
+						t[i][j] = plane->property(cogs, fv_it.handle()).data()[j];
+						p[i][j] = plane->point(fv_it.handle()).data()[j];
+					}
+					//glVertex3dv(point(fv_it.handle()).data());
+
+					i++;
+					//std::cout << p[0] << std::endl;
+					//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
+				}
+
+				glTexCoord2d(t[0][0], t[0][1]); glVertex3f(p[0][0], p[0][1], p[0][2]);
+				glTexCoord2d(t[1][0], t[1][1]); glVertex3f(p[1][0], p[1][1], p[1][2]);
+				glTexCoord2d(t[2][0], t[2][1]); glVertex3f(p[2][0], p[2][1], p[2][2]);
+
+			}
+			//std::cout << "------------" << std::endl;
+			glEnd();
+
+			glDisable(GL_BLEND);
+			glDisable(GL_TEXTURE_2D);
 		}
 		if (plane != NULL) {
 			for (OMT::VIter v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it)
@@ -388,6 +433,7 @@ namespace OpenMesh_EX {
 				bool neighboringface = false;
 				if (faces.size() == 0) {
 					plane = new Tri_Mesh;
+					plane->initTexture();
 					plane->add_property(cogs);
 					neighboringface = true;
 				}
@@ -635,8 +681,8 @@ namespace OpenMesh_EX {
 
 		mesh = new Tri_Mesh;
 		plane = new Tri_Mesh;
+		plane->initTexture();
 		plane->add_property(cogs);
-
 		if (ReadFile(filename, mesh))
 			std::cout << filename << std::endl;
 

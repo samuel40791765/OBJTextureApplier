@@ -8,8 +8,12 @@
 #include <OpenMesh/Tools/Utils/getopt.h>
 
 #include <windows.h>
+#include "../vgl.h"
 #include <gl/gl.h>
 #include <gl/glu.h>
+#include <opencv\cv.h>
+#include <opencv\highgui.h>
+
 
 struct Face_InnerAngle
 {
@@ -229,7 +233,7 @@ public:
 	OMT::VHandle                               start_vh, end_vh;
 	OMT::VHandle                               ExtremeVh[2];
 	int                                        PatchType;
-
+	GLuint texture;
 	std::vector<OMT::VHandle>                  Pluspt;
 	std::vector<OMT::VHandle>                  Minuspt;
 	std::vector<OMT::VHandle>                  Extrme_Pt;
@@ -237,7 +241,9 @@ public:
 
 	void Render_Solid();
 	void setPoint(GLfloat p1, GLfloat p2, GLfloat p3);
+	void initTexture();
 	void Render_SolidWireframe();
+	void RenderTextureOn();
 	void Render_Wireframe();
 	void Render_Point();
 	void setPoint();
@@ -252,5 +258,10 @@ bool ReadFile(std::string _fileName, Tri_Mesh *_mesh); //讀取mesh資料
 bool SaveFile(std::string _fileName, Tri_Mesh *_mesh); //儲存mesh資料
 													   /*初始化view port設定函式*/
 
+namespace TextureApp {
+	bool	LoadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, GLubyte **outData);
+	GLuint	GenTexture(char* filepath);
+	void ScreenShot(std::string& file);
+}
 #endif
 

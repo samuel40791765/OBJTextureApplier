@@ -46,13 +46,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>../Eigen-3.2.8;..\OpenMesh-5.2\src;$(IncludePath)</IncludePath>
-    <LibraryPath>..\OpenMesh-5.2\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>../include;../Eigen-3.2.8;..\OpenMesh-5.2\src;$(IncludePath)</IncludePath>
+    <LibraryPath>../lib;..\OpenMesh-5.2\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\OpenMesh-5.2\src;$(IncludePath)</IncludePath>
-    <LibraryPath>..\OpenMesh-5.2\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>../include;../Eigen-3.2.8;..\OpenMesh-5.2\src;$(IncludePath)</IncludePath>
+    <LibraryPath>../lib;..\OpenMesh-5.2\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -61,7 +61,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;OpenMeshCored.lib</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;OpenMeshCore.lib;opencv_core2413.lib;opencv_highgui2413.lib;opencv_objdetect2413.lib;zlib.lib;freeglut.lib;freeglut_static.lib;glew32.lib;glew32s.lib;libpng16.lib</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <EntryPointSymbol>main</EntryPointSymbol>
     </Link>
@@ -72,7 +72,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;OpenMeshCore.lib</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;OpenMeshCore.lib;opencv_core2413.lib;opencv_highgui2413.lib;opencv_objdetect2413.lib;zlib.lib;freeglut.lib;freeglut_static.lib;glew32.lib;glew32s.lib;libpng16.lib</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <EntryPointSymbol>main</EntryPointSymbol>
     </Link>
@@ -101,6 +101,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="vgl.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MyForm.resx">

@@ -38,6 +38,9 @@
     <ClInclude Include="Mesh\GUA_OM.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
+    <ClInclude Include="vgl.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MyForm.resx">

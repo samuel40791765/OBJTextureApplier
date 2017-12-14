@@ -491,6 +491,53 @@ void Tri_Mesh::Render_Solid()
 	glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
+void Tri_Mesh::initTexture()
+{
+	texture = TextureApp::GenTexture("Textures\\background.jpg");
+}
+
+void Tri_Mesh::RenderTextureOn()
+{
+	glDisable(GL_LIGHTING);
+	glPushAttrib(GL_LIGHTING_BIT);
+	glEnable(GL_POLYGON_OFFSET_FILL);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	
+	glPolygonOffset(2.0, 2.0);
+	glBegin(GL_TRIANGLES);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	//std::cout << "mouse in GUA_OM:" << clickPoint[0] << " " << clickPoint[1] << " " << clickPoint[2] << std::endl;
+	for (OMT::FIter f_it = faces_begin(); f_it != faces_end(); ++f_it)
+	{
+		OMT::Point p[3];
+		int i = 0;
+		for (OMT::FVIter fv_it = fv_iter(f_it); fv_it; ++fv_it)
+		{
+
+			//glNormal3dv(normal(fv_it.handle()));
+			for (int j = 0; j < 3; j++) {
+				p[i][j] = point(fv_it.handle()).data()[j];
+			}
+			//glVertex3dv(point(fv_it.handle()).data());
+
+			i++;
+			//std::cout << p[0] << std::endl;
+			//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
+		}
+		glVertex3f(p[0][0], p[0][1], p[0][2]);
+		glVertex3f(p[1][0], p[1][1], p[1][2]);
+		glVertex3f(p[2][0], p[2][1], p[2][2]);
+
+	}
+	//std::cout << "------------" << std::endl;
+	glEnd();
+}
+
+
 void Tri_Mesh::setPoint(GLfloat p0, GLfloat p1, GLfloat p2) {
 	clickPoint[0] = p0;
 	clickPoint[1] = p1;
@@ -629,4 +676,33 @@ bool SaveFile(std::string _fileName, Tri_Mesh *_mesh)
 		isSave = true;
 	}
 	return isSave;
+}
+
+
+GLuint TextureApp::GenTexture(char* filepath)
+{
+	char *format = filepath;
+	unsigned int textureID = 0;
+	while (*format != 0) format++;
+	while (format != filepath && *format != '.') format--;
+
+	
+	
+		IplImage *img = NULL;
+		img = cvLoadImage(filepath, 1);
+
+		if (img != NULL)
+		{
+			cvFlip(img);
+			glGenTextures(1, &textureID);
+			glBindTexture(GL_TEXTURE_2D, textureID);
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, img->width, img->height, GL_BGR_EXT, GL_UNSIGNED_BYTE, img->imageData);
+		}
+		else printf("cannot find %s \n", filepath);
+	
+
+	return textureID;
 }
