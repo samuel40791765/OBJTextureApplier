@@ -13,6 +13,11 @@
 #include <gl/glu.h>
 #include <opencv\cv.h>
 #include <opencv\highgui.h>
+#include <Eigen\Sparse>
+
+
+
+using namespace Eigen;
 //#include "TextureApp.h"
 
 
@@ -234,24 +239,42 @@ public:
 	OMT::VHandle                               start_vh, end_vh;
 	OMT::VHandle                               ExtremeVh[2];
 	int                                        PatchType;
-	GLuint texture;
+	
 	std::vector<OMT::VHandle>                  Pluspt;
 	std::vector<OMT::VHandle>                  Minuspt;
 	std::vector<OMT::VHandle>                  Extrme_Pt;
 
+	Tri_Mesh *plane;
+	OpenMesh::FPropHandleT<int> usingtext;
+	GLuint currenttexture;
 
 	void Render_Solid();
 	void setPoint(GLfloat p1, GLfloat p2, GLfloat p3);
 	void initTexture();
-	void changeTexture(std::string filename);
+	void addTexture(std::string filename);
 	void Render_SolidWireframe();
 	void RenderTextureOn();
 	void Render_Wireframe();
 	void Render_Point();
 	void setPoint();
-
+	void setOuterPoints();
+	void setWeight();
+	void Parameterize();
+	void setPlaneFacetoMeshFace(OMT::FHandle meshface, OMT::FHandle planeface);
+	double calcAngle(OMT::Point pnt1, OMT::Point pnt2);
+	float dot(OMT::Point a, OMT::Point b);
+	float mag(OMT::Point a);
 private:
 	Point clickPoint;
+	std::vector<GLuint> textures;
+	OpenMesh::VPropHandleT<OMT::Point> cogs;
+	OpenMesh::VPropHandleT<OMT::VHandle> planetomesh;
+	
+	std::vector<OMT::VHandle> outerpnts;
+	std::vector<OMT::VHandle> innerpnts;
+	std::vector<std::vector<double>> weights;
+	
+	
 };
 
 ///*======================================================================*/

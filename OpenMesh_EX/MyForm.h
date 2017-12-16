@@ -7,11 +7,7 @@
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 #include <OpenMesh/Tools/Utils/getopt.h>
 #include <vector>
-#include <Eigen\Sparse>
 
-#define PI 3.14159265
-
-using namespace Eigen;
 
 
 static const Mouse::button physical_to_logical_map[] = {
@@ -30,7 +26,6 @@ namespace OpenMesh_EX {
 	using namespace System::Data;
 	using namespace System::Drawing;
 	Tri_Mesh *mesh;
-	Tri_Mesh *plane;
 	xform xf;
 	xform xfpanel;
 	GLCamera camera;
@@ -40,12 +35,10 @@ namespace OpenMesh_EX {
 	point points;
 	point nearest;
 	bool clicked = false;
-	OpenMesh::VPropHandleT<OMT::Point> cogs;
+	//OpenMesh::VPropHandleT<OMT::Point> cogs;
 	std::vector<std::vector<point>> pnts;
 	std::vector<OMT::FIter> faces;
-	std::vector<OMT::VHandle> outerpnts;
-	std::vector<OMT::VHandle> innerpnts;
-	std::vector<std::vector<double>> weights;
+	
 	Mouse::button Mouse_State = Mouse::ROTATE;
 
 
@@ -301,7 +294,8 @@ namespace OpenMesh_EX {
 		if (e->KeyCode == Keys::Space)
 		{
 			pnts.clear();
-			plane = NULL;
+			delete mesh->plane;
+			mesh->plane = new Tri_Mesh;
 			hkoglPanelControl1->Invalidate();
 			hkoglPanelControl2->Invalidate();
 			faces.clear();
@@ -328,12 +322,12 @@ namespace OpenMesh_EX {
 		glPushMatrix();
 		glMatrixMode(GL_MODELVIEW);
 		glMultMatrixd((double *)xfpanel);
-		if (plane != NULL) {
-			//plane->Render_SolidWireframe();
-			setOuterPoints();
-			setWeight();
-			Parameterize();
-			std::cout << "outer: " << std::endl;
+		if (mesh != NULL) {
+			mesh->setOuterPoints();
+			mesh->setWeight();
+			mesh->Parameterize();
+			mesh->RenderTextureOn();
+			/*std::cout << "outer: " << std::endl;
 			for (int i = 0; i < outerpnts.size(); i++) {
 				std::cout << i << ": " << plane->point(outerpnts[i]).data()[0] << " " << plane->point(outerpnts[i]).data()[1] << " " << plane->point(outerpnts[i]).data()[2];
 				std::cout << " 2D: " << plane->property(cogs, outerpnts[i])[0] << " " << plane->property(cogs, outerpnts[i])[1] << " " << plane->property(cogs, outerpnts[i])[2] << std::endl;
@@ -342,64 +336,12 @@ namespace OpenMesh_EX {
 			for (int i = 0; i < innerpnts.size(); i++) {
 				std::cout << i << ": " << plane->point(innerpnts[i]).data()[0] << " " << plane->point(innerpnts[i]).data()[1] << " " << plane->point(innerpnts[i]).data()[2];
 				std::cout << " 2D: " << plane->property(cogs, innerpnts[i])[0] << " " << plane->property(cogs, innerpnts[i])[1] << " " << plane->property(cogs, innerpnts[i])[2] << std::endl;
-			}
-			std::cout << std::endl;
+			}*/
+			//std::cout << std::endl;
 			//turn the points around the faces into Viterators
 
-			glDisable(GL_LIGHTING);
-			glPushAttrib(GL_LIGHTING_BIT);
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glEnable(GL_DEPTH_TEST);
-			glEnable(GL_TEXTURE_2D);
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-
-			glPolygonOffset(2.0, 2.0);
-			glBegin(GL_TRIANGLES);
-			glColor4f(1.0, 0.96, 0.49, 1.0);
-			glBindTexture(GL_TEXTURE_2D, plane->texture);
-			//std::cout << "mouse in GUA_OM:" << clickPoint[0] << " " << clickPoint[1] << " " << clickPoint[2] << std::endl;
-			for (OMT::FIter f_it = plane->faces_begin(); f_it != plane->faces_end(); ++f_it)
-			{
-				OMT::Point p[3];
-				OMT::Point t[3];
-				int i = 0;
-				for (OMT::FVIter fv_it = plane->fv_iter(f_it); fv_it; ++fv_it)
-				{
-
-					//glNormal3dv(normal(fv_it.handle()));
-					for (int j = 0; j < 3; j++) {
-						t[i][j] = plane->property(cogs, fv_it.handle()).data()[j];
-						p[i][j] = plane->point(fv_it.handle()).data()[j];
-					}
-					//glVertex3dv(point(fv_it.handle()).data());
-
-					i++;
-					//std::cout << p[0] << std::endl;
-					//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
-				}
-
-				glTexCoord2d(t[0][0], t[0][1]); glVertex3f(p[0][0], p[0][1], p[0][2]);
-				glTexCoord2d(t[1][0], t[1][1]); glVertex3f(p[1][0], p[1][1], p[1][2]);
-				glTexCoord2d(t[2][0], t[2][1]); glVertex3f(p[2][0], p[2][1], p[2][2]);
-
-			}
-			//std::cout << "------------" << std::endl;
-			glEnd();
-
-			glDisable(GL_BLEND);
-			glDisable(GL_TEXTURE_2D);
 		}
-		if (plane != NULL) {
-			for (OMT::VIter v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it)
-			{
-				//std::cout << v_it << ": " << plane->point(v_it.handle()).data()[0] << " " << plane->point(v_it.handle()).data()[1] << " " << plane->point(v_it.handle()).data()[2] << std::endl;
-			}
-
-		}
-
-
+		
 
 	}
 
@@ -497,9 +439,6 @@ namespace OpenMesh_EX {
 				bool faceexists = false;
 				bool neighboringface = false;
 				if (faces.size() == 0) {
-					plane = new Tri_Mesh;
-					plane->initTexture();
-					plane->add_property(cogs);
 					neighboringface = true;
 				}
 				for (int i = 0; i < faces.size(); i++) {
@@ -528,8 +467,8 @@ namespace OpenMesh_EX {
 					{
 						OMT::VIter v_it;
 						bool exists = false;
-						for (v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it) {
-							if (plane->point(v_it.handle()) == mesh->point(fv_it.handle())) {
+						for (v_it = mesh->plane->vertices_begin(); v_it != mesh->plane->vertices_end(); ++v_it) {
+							if (mesh->plane->point(v_it.handle()) == mesh->point(fv_it.handle())) {
 								exists = true;
 								break;
 							}
@@ -537,12 +476,12 @@ namespace OpenMesh_EX {
 						if (exists)
 							face_vhandles.push_back(v_it.handle());
 						else
-							face_vhandles.push_back(plane->add_vertex(mesh->point(fv_it.handle())));
+							face_vhandles.push_back(mesh->plane->add_vertex(mesh->point(fv_it.handle())));
+
 					}
-					plane->add_face(face_vhandles);
+					mesh->setPlaneFacetoMeshFace(currentface, mesh->plane->add_face(face_vhandles));
 					hkoglPanelControl2->Invalidate();
 				}
-
 			}
 			clicked = false;
 		}
@@ -754,12 +693,12 @@ namespace OpenMesh_EX {
 			delete mesh;
 
 		mesh = new Tri_Mesh;
-		plane = new Tri_Mesh;
-		plane->initTexture();
-		plane->add_property(cogs);
+		
 		if (ReadFile(filename, mesh))
 			std::cout << filename << std::endl;
-
+		mesh->plane = new Tri_Mesh;
+		mesh->initTexture();
+		
 
 		hkoglPanelControl1->Invalidate();
 	}
@@ -771,8 +710,8 @@ namespace OpenMesh_EX {
 		std::cout << filename << std::endl;
 		//plane->initTexture();
 		this->textboxToolStripMenuItem->Text = "¥Ø«etexture: " + openTextureDialog->FileName;
-		if (plane != NULL) {
-			plane->changeTexture(filename);
+		if (mesh != NULL) {
+			mesh->addTexture(filename);
 		}
 
 		hkoglPanelControl1->Invalidate();
@@ -794,237 +733,6 @@ namespace OpenMesh_EX {
 
 	private: System::Void MyForm_Load(System::Object^  sender, System::EventArgs^  e) {
 	}
-
-
-	private: void setOuterPoints() {
-		outerpnts.clear();
-		innerpnts.clear();
-		OMT::VertexHandle heh, heh_init;
-		std::cout << plane->faces_end() << std::endl;
-		for (OMT::VIter v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it) {
-			std::cout << "start: " << plane->point(v_it.handle()).data()[0] << " " << plane->point(v_it.handle()).data()[1] << " " << plane->point(v_it.handle()).data()[2] << std::endl;
-			heh = heh_init = v_it.handle();
-			if (plane->is_boundary(heh_init))
-				break;
-		}
-		//!((plane->is_boundary(plane->halfedge_handle(voh_it)) && plane->is_boundary(plane->opposite_halfedge_handle(plane->halfedge_handle(voh_it))))) ||
-		for (OMT::VOHEIter voh_it = plane->voh_iter(heh_init); voh_it; ++voh_it) {
-			// Iterate over all outgoing halfedges...
-			if (plane->is_boundary(plane->to_vertex_handle(voh_it))) {
-				heh = plane->to_vertex_handle(voh_it);
-				std::cout << "second: " << plane->point(plane->to_vertex_handle(voh_it))[0] << " " << plane->point(plane->to_vertex_handle(voh_it))[1] << " " << plane->point(plane->to_vertex_handle(voh_it))[2] << std::endl;
-				outerpnts.push_back(heh);
-				break;
-			}
-		}
-		// We can do this as often as we want:
-		while (heh != heh_init) {
-			for (OMT::VOHEIter voh_it = plane->voh_iter(heh); voh_it; ++voh_it) {
-				// Iterate over all outgoing halfedges...
-				bool exists = false;
-				for (int i = 0; i < outerpnts.size(); i++) {
-					if (plane->to_vertex_handle(plane->halfedge_handle(voh_it)) == outerpnts[i]) {
-						exists = true;
-						break;
-					}
-				}
-				if ((plane->is_boundary(plane->to_vertex_handle(voh_it)))
-					&& !exists) {
-					heh = plane->to_vertex_handle(voh_it);
-					std::cout << plane->point(plane->to_vertex_handle(voh_it))[0] << " " << plane->point(plane->to_vertex_handle(voh_it))[1] << " " << plane->point(plane->to_vertex_handle(voh_it))[2] << std::endl;
-					outerpnts.push_back(heh);
-					break;
-				}
-			}
-		}
-		for (OMT::VIter v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it) {
-			bool exists = false;
-			for (int i = 0; i < outerpnts.size(); i++) {
-				if (outerpnts[i] == v_it.handle()) {
-					exists = true;
-					break;
-				}
-			}
-			if (!exists)
-				innerpnts.push_back(v_it.handle());
-		}
-
-	}
-
-	private: void setWeight() {
-
-		OMT::VHandle firstpnt;
-		OMT::VHandle secondpnt;
-		weights.clear();
-		double cog;
-		for (int i = 0; i < innerpnts.size(); i++) {
-			std::vector<double> circleweight;
-			for (OMT::VVIter vvit = plane->vv_iter(innerpnts[i]); vvit; ++vvit) {
-				bool firstpntset = false;
-				for (OMT::VVIter vvitvvit = plane->vv_iter(vvit); vvitvvit; ++vvitvvit) {
-					for (OMT::VVIter vvcomp = plane->vv_iter(innerpnts[i]); vvcomp; ++vvcomp) {
-						if (mesh->point(vvitvvit.handle()) == mesh->point(vvcomp.handle()) && firstpntset) {
-							secondpnt = vvitvvit.handle();
-							break;
-						}
-						if (mesh->point(vvitvvit.handle()) == mesh->point(vvcomp.handle())) {
-							firstpnt = vvitvvit.handle();
-							firstpntset = true;
-						}
-					}
-				}
-				OMT::Vec3d firstvct = mesh->point(firstpnt) - mesh->point(innerpnts[i]);
-				OMT::Vec3d secondvct = mesh->point(secondpnt) - mesh->point(innerpnts[i]);
-				OMT::Vec3d vvitvct = mesh->point(vvit.handle()) - mesh->point(innerpnts[i]);
-				double weight = (tan((calcAngle(firstvct, vvitvct) / 2) * PI / 180.0) + tan((calcAngle(vvitvct, secondvct) / 2) * PI / 180.0)) / vvitvct.length();
-				circleweight.push_back(weight);
-			}
-			weights.push_back(circleweight);
-		}
-	}
-
-	private: void Parameterize() {
-		int size = 4;
-		double scale = 0;
-		double distance = 0;
-		double currentdist = 0;
-		std::vector<double> oneline;
-		for (int i = 0; i < outerpnts.size(); i++) {
-			distance += sqrt(pow(plane->point(outerpnts[i%outerpnts.size()]).data()[0] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[0], 2) +
-				pow(plane->point(outerpnts[i%outerpnts.size()]).data()[1] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[1], 2) +
-				pow(plane->point(outerpnts[i%outerpnts.size()]).data()[2] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[2], 2));
-		}
-		std::cout << distance << std::endl;
-		scale = distance / size;
-		for (int i = 0; i < outerpnts.size(); i++) {
-			double pntdistance = sqrt(pow(plane->point(outerpnts[i%outerpnts.size()]).data()[0] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[0], 2) +
-				pow(plane->point(outerpnts[i%outerpnts.size()]).data()[1] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[1], 2) +
-				pow(plane->point(outerpnts[i%outerpnts.size()]).data()[2] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[2], 2));
-			currentdist += pntdistance / scale;
-			oneline.push_back(currentdist);
-		}
-
-		// smoothing mesh argv[1] times
-		OMT::Point               cog;
-		plane->remove_property(cogs);
-		plane->add_property(cogs);
-		for (int i = 0; i < outerpnts.size(); i++)
-		{
-			plane->property(cogs, outerpnts[i]).vectorize(0.0f);
-			if (oneline[i] <= 1) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(oneline[i], 0, 0);
-			}
-			else if (oneline[i] <= 2) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(1, oneline[i] - 1, 0);
-			}
-			else if (oneline[i] <= 3) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(1 - (oneline[i] - 2), 1, 0);
-			}
-			else if (oneline[i] <= 4) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(0, 1 - (oneline[i] - 3), 0);
-			}
-		}
-
-		if (innerpnts.size() > 0) {
-			SparseMatrix<double> A(innerpnts.size(), innerpnts.size());
-			std::vector<VectorXd> B;
-			B.resize(2); //B is 2D
-
-			B[0].resize(innerpnts.size());
-			B[1].resize(innerpnts.size());
-
-			for (int i = 0; i < innerpnts.size(); i++) {
-				for (int j = 0; j < innerpnts.size(); j++) {
-					int k = 0;
-					if (i == j) {
-						double totalweight = 0;
-						for (int w = 0; w < weights[i].size(); w++)
-							totalweight += weights[i][w];
-						A.insert(i, j) = totalweight;
-					}
-					if (i != j) {
-						for (OMT::VVIter vvit = plane->vv_iter(innerpnts[i]); vvit; ++vvit) {
-							if (vvit.handle() == innerpnts[j]) {
-								A.insert(i, j) = weights[i][k] * -1;
-								break;
-							}
-							k++;
-						}
-					}
-				}
-			}
-			A.makeCompressed();
-
-			for (int i = 0; i < innerpnts.size(); i++) {
-				double outerweightx = 0;
-				double outerweighty = 0;
-				for (int j = 0; j < outerpnts.size(); j++) {
-					int k = 0;
-					for (OMT::VVIter vvit = plane->vv_iter(innerpnts[i]); vvit; ++vvit) {
-						if (vvit.handle() == outerpnts[j]) {
-							outerweightx += weights[i][k] * plane->property(cogs, outerpnts[j])[0];
-							outerweighty += weights[i][k] * plane->property(cogs, outerpnts[j])[1];
-							break;
-						}
-						k++;
-					}
-				}
-				B[0][i] = outerweightx;
-				B[1][i] = outerweightx;
-			}
-
-			SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> linearSolver;
-			linearSolver.compute(A);
-
-			std::vector<VectorXd> X;
-			X.resize(2);
-
-			X[0] = linearSolver.solve(B[0]);
-			X[1] = linearSolver.solve(B[1]);
-
-
-			for (int i = 0; i < innerpnts.size(); i++) {
-				plane->property(cogs, innerpnts[i]).vectorize(0.0f);
-				plane->property(cogs, innerpnts[i]) = OMT::Point(X[0][i], X[1][i], 0);
-			}
-		}
-		/*for (v_it = mesh.vertices_begin(); v_it != v_end; ++v_it)
-		if (!mesh.is_boundary(*v_it))
-		mesh.set_point(*v_it, mesh.property(cogs, *v_it));*/
-
-
-
-
-		/*for (int i = 0; i < outerpnts.size(); i++)
-		{
-		mesh->property(cogs, outerpnts[i]).vectorize(0.0f);
-		if (i == 0)
-		continue;
-		for (vv_it = mesh.vv_iter(*v_it); vv_it; ++vv_it)
-		{
-		mesh.property(cogs, *v_it) += mesh.point(*vv_it);
-		}
-		mesh.property(cogs, *v_it) /= valence;
-		}
-
-		for (v_it = mesh.vertices_begin(); v_it != v_end; ++v_it)
-		if (!mesh.is_boundary(*v_it))
-		mesh.set_point(*v_it, mesh.property(cogs, *v_it));*/
-	}
-
-			 double calcAngle(OMT::Point pnt1, OMT::Point pnt2) {
-				 return (std::acos(dot(pnt1, pnt2) / (mag(pnt1)*mag(pnt2))) * 180) / 3.1415926535;
-			 }
-
-			 float dot(OMT::Point a, OMT::Point b)  //calculates dot product of a and b
-			 {
-				 return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-			 }
-
-			 float mag(OMT::Point a)  //calculates magnitude of a
-			 {
-				 return std::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-			 }
 
 
 	};

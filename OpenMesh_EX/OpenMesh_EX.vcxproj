@@ -51,7 +51,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>../include;../Eigen-3.2.8;..\OpenMesh-5.2\src;$(IncludePath)</IncludePath>
+    <IncludePath>../;../include;../Eigen-3.2.8;..\OpenMesh-5.2\src;$(IncludePath)</IncludePath>
     <LibraryPath>../lib;..\OpenMesh-5.2\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
