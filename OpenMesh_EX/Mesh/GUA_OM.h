@@ -13,6 +13,7 @@
 #include <gl/glu.h>
 #include <opencv\cv.h>
 #include <opencv\highgui.h>
+//#include "TextureApp.h"
 
 
 struct Face_InnerAngle
@@ -242,6 +243,7 @@ public:
 	void Render_Solid();
 	void setPoint(GLfloat p1, GLfloat p2, GLfloat p3);
 	void initTexture();
+	void changeTexture(std::string filename);
 	void Render_SolidWireframe();
 	void RenderTextureOn();
 	void Render_Wireframe();

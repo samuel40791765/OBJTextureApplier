@@ -1,4 +1,5 @@
 #include "GUA_OM.h"
+//#include "TextureApp.h"
 
 namespace OMT
 {
@@ -493,7 +494,15 @@ void Tri_Mesh::Render_Solid()
 
 void Tri_Mesh::initTexture()
 {
+	//E:\基礎電腦圖學\Q6\project\OBJTextureApplier-Texturetest\OBJTextureApplier-Texturetest\Release\Textures\background.jpg
+
 	texture = TextureApp::GenTexture("Textures\\background.jpg");
+}
+void Tri_Mesh::changeTexture(std::string filename)
+{
+	char *f = new char[filename.length() + 1];
+	strcpy(f, filename.c_str());
+	texture = TextureApp::GenTexture(f);
 }
 
 void Tri_Mesh::RenderTextureOn()
@@ -506,7 +515,7 @@ void Tri_Mesh::RenderTextureOn()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	
+
 	glPolygonOffset(2.0, 2.0);
 	glBegin(GL_TRIANGLES);
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -686,23 +695,23 @@ GLuint TextureApp::GenTexture(char* filepath)
 	while (*format != 0) format++;
 	while (format != filepath && *format != '.') format--;
 
-	
-	
-		IplImage *img = NULL;
-		img = cvLoadImage(filepath, 1);
 
-		if (img != NULL)
-		{
-			cvFlip(img);
-			glGenTextures(1, &textureID);
-			glBindTexture(GL_TEXTURE_2D, textureID);
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, img->width, img->height, GL_BGR_EXT, GL_UNSIGNED_BYTE, img->imageData);
-		}
-		else printf("cannot find %s \n", filepath);
-	
+
+	IplImage *img = NULL;
+	img = cvLoadImage(filepath, 1);
+
+	if (img != NULL)
+	{
+		cvFlip(img);
+		glGenTextures(1, &textureID);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, img->width, img->height, GL_BGR_EXT, GL_UNSIGNED_BYTE, img->imageData);
+	}
+	else printf("cannot find %s \n", filepath);
+
 
 	return textureID;
 }
