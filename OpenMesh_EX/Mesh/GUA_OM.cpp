@@ -502,7 +502,7 @@ void Tri_Mesh::initTexture()
 	add_property(usingtext);
 	add_property(cogs);
 	addTexture("Z:/Documents/graphics2017/Release/Textures/background.jpg");
-	currenttexture = textures[0];
+	//currenttexture = textures[0];
 	for (OMT::FIter f_it = faces_begin(); f_it != faces_end(); ++f_it) {
 		property(usingtext, f_it.handle()) = 999;
 	}
@@ -512,7 +512,8 @@ void Tri_Mesh::addTexture(std::string filename)
 	char *f = new char[filename.length() + 1];
 	strcpy(f, filename.c_str());
 	textures.push_back(TextureApp::GenTexture(f));
-	currenttexture = textures[textures.size() - 1];
+	currenttexture = TextureApp::GenTexture(f);
+	//currenttexture = textures[textures.size() - 1];
 }
 	
 
@@ -538,21 +539,23 @@ void Tri_Mesh::RenderTextureOn()
 		if (property(usingtext, f_it.handle()) != 999) {
 			glEnable(GL_TEXTURE_2D);
 			glEnable(GL_BLEND);
-			glBindTexture(GL_TEXTURE_2D, property(usingtext, f_it.handle()));
+			//glBindTexture(GL_TEXTURE_2D, property(usingtext, f_it.handle()));
+			glBindTexture(GL_TEXTURE_2D, currenttexture);
 			glBegin(GL_TRIANGLES);
 			for (OMT::FVIter fv_it = fv_iter(f_it); fv_it; ++fv_it)
 			{
 				//glNormal3dv(normal(fv_it.handle()));
 				for (int j = 0; j < 3; j++) {
-					t[i][j] = property(cogs, fv_it.handle()).data()[j];
+					t[i][j] = property(cogs, fv_it.handle())[j];
 					p[i][j] = point(fv_it.handle()).data()[j];
 				}
 				//glVertex3dv(point(fv_it.handle()).data());
-
+				std::cout << i << ": " << t[i][0] << " " << t[i][1] << " " << t[i][2] << std::endl;
 				i++;
 				//std::cout << p[0] << std::endl;
 				//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
 			}
+			std::cout << std::endl;
 			std::cout << "outer: " << std::endl;
 			for (int i = 0; i < outerpnts.size(); i++) {
 				std::cout << i << ": " << plane->point(outerpnts[i]).data()[0] << " " << plane->point(outerpnts[i]).data()[1] << " " << plane->point(outerpnts[i]).data()[2];
@@ -564,9 +567,10 @@ void Tri_Mesh::RenderTextureOn()
 				std::cout << " 2D: " << plane->property(cogs, innerpnts[i])[0] << " " << plane->property(cogs, innerpnts[i])[1] << " " << plane->property(cogs, innerpnts[i])[2] << std::endl;
 			}
 
-			glTexCoord2d(t[0][0], t[0][1]); glVertex3f(p[0][0], p[0][1], p[0][2]);
-			glTexCoord2d(t[1][0], t[1][1]); glVertex3f(p[1][0], p[1][1], p[1][2]);
-			glTexCoord2d(t[2][0], t[2][1]); glVertex3f(p[2][0], p[2][1], p[2][2]);
+			glTexCoord2d(1 - t[0][0], t[0][1]); glVertex3f(p[0][0], p[0][1], p[0][2]);
+			glTexCoord2d(1 - t[1][0], t[1][1]); glVertex3f(p[1][0], p[1][1], p[1][2]);
+			glTexCoord2d(1 - t[2][0], t[2][1]); glVertex3f(p[2][0], p[2][1], p[2][2]);
+			glEnd();
 			glDisable(GL_BLEND);
 			glDisable(GL_TEXTURE_2D);
 		}
@@ -588,11 +592,12 @@ void Tri_Mesh::RenderTextureOn()
 			glVertex3f(p[0][0], p[0][1], p[0][2]);
 			glVertex3f(p[1][0], p[1][1], p[1][2]);
 			glVertex3f(p[2][0], p[2][1], p[2][2]);
+			glEnd();
 		}
 
 	}
 	//std::cout << "------------" << std::endl;
-	glEnd();
+	
 
 	
 	
@@ -777,19 +782,19 @@ void Tri_Mesh::setWeight() {
 				bool firstpntset = false;
 				for (OMT::VVIter vvitvvit = plane->vv_iter(vvit); vvitvvit; ++vvitvvit) {
 					for (OMT::VVIter vvcomp = plane->vv_iter(innerpnts[i]); vvcomp; ++vvcomp) {
-						if (point(vvitvvit.handle()) == point(vvcomp.handle()) && firstpntset) {
+						if (plane->point(vvitvvit.handle()) == plane->point(vvcomp.handle()) && firstpntset) {
 							secondpnt = vvitvvit.handle();
 							break;
 						}
-						if (point(vvitvvit.handle()) == point(vvcomp.handle())) {
+						if (plane->point(vvitvvit.handle()) == plane->point(vvcomp.handle())) {
 							firstpnt = vvitvvit.handle();
 							firstpntset = true;
 						}
 					}
 				}
-				OMT::Vec3d firstvct = point(firstpnt) - point(innerpnts[i]);
-				OMT::Vec3d secondvct = point(secondpnt) - point(innerpnts[i]);
-				OMT::Vec3d vvitvct = point(vvit.handle()) - point(innerpnts[i]);
+				OMT::Vec3d firstvct = plane->point(firstpnt) - plane->point(innerpnts[i]);
+				OMT::Vec3d secondvct = plane->point(secondpnt) - plane->point(innerpnts[i]);
+				OMT::Vec3d vvitvct = plane->point(vvit.handle()) - plane->point(innerpnts[i]);
 				double weight = (tan((calcAngle(firstvct, vvitvct) / 2) * PI / 180.0) + tan((calcAngle(vvitvct, secondvct) / 2) * PI / 180.0)) / vvitvct.length();
 				circleweight.push_back(weight);
 			}
@@ -930,10 +935,12 @@ void Tri_Mesh::Parameterize() {
 	}
 	
 void Tri_Mesh::setPlaneFacetoMeshFace(OMT::FHandle face, OMT::FHandle planeface) {
-	for (OMT::FVIter plane_fv_it = fv_iter(planeface); plane_fv_it; ++plane_fv_it) {
+	for (OMT::FVIter plane_fv_it = plane->fv_iter(planeface); plane_fv_it; ++plane_fv_it) {
 		for (OMT::FVIter fv_it = fv_iter(face); fv_it; ++fv_it) {
-			if (plane->point(plane_fv_it.handle()).data() == point(fv_it.handle()).data()) {
-				plane->property(planetomesh, fv_it.handle()) = fv_it.handle();
+			if (plane->point(plane_fv_it.handle()).data()[0] == point(fv_it.handle()).data()[0] &&
+				plane->point(plane_fv_it.handle()).data()[1] == point(fv_it.handle()).data()[1] && 
+				plane->point(plane_fv_it.handle()).data()[2] == point(fv_it.handle()).data()[2]) {
+				plane->property(planetomesh, plane_fv_it.handle()) = fv_it.handle();
 				break;
 			}
 		}
