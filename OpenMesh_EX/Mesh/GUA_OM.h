@@ -245,8 +245,9 @@ public:
 	std::vector<OMT::VHandle>                  Extrme_Pt;
 
 	Tri_Mesh *plane;
-	OpenMesh::FPropHandleT<int> usingtext;
-	GLuint currenttexture;
+	OpenMesh::FPropHandleT<std::string> usingtext;
+	OpenMesh::FPropHandleT<bool> confirmed;
+	std::string currenttexture;
 
 	void refreshPlane();
 	void Render_Solid();
@@ -267,14 +268,13 @@ public:
 	float mag(OMT::Point a);
 private:
 	Point clickPoint;
-	std::vector<GLuint> textures;
+	std::vector<std::string> textures;
 	struct texturepoint {
-		GLuint texture;
+		std::string texture;
 		OMT::Point pnt;
 	};
 	OpenMesh::VPropHandleT<std::vector<texturepoint>> cogs;
 	OpenMesh::VPropHandleT<OMT::VHandle> planetomesh;
-	
 	std::vector<OMT::VHandle> outerpnts;
 	std::vector<OMT::VHandle> innerpnts;
 	std::vector<std::vector<double>> weights;

@@ -501,12 +501,15 @@ void Tri_Mesh::initTexture()
 	plane->add_property(planetomesh);
 	add_property(usingtext);
 	add_property(cogs);
+	add_property(confirmed);
 	addTexture("Z:/Documents/graphics2017/Release/Textures/background.jpg");
 	//currenttexture = textures[0];
 	for (OMT::FIter f_it = faces_begin(); f_it != faces_end(); ++f_it) {
-		property(usingtext, f_it.handle()) = 999;
+		property(usingtext, f_it.handle()) = "NULL";
+		property(confirmed, f_it.handle()) = false;
 	}
 }
+
 
 void Tri_Mesh::refreshPlane() {
 	delete plane;
@@ -521,8 +524,9 @@ void Tri_Mesh::addTexture(std::string filename)
 {
 	char *f = new char[filename.length() + 1];
 	strcpy(f, filename.c_str());
-	//textures.push_back(TextureApp::GenTexture(f));
-	currenttexture = TextureApp::GenTexture(f);
+	textures.push_back(f);
+	currenttexture = textures[textures.size() - 1];
+	//currenttexture = TextureApp::GenTexture(f);
 	//currenttexture = textures[textures.size() - 1];
 }
 	
@@ -546,11 +550,12 @@ void Tri_Mesh::RenderTextureOn()
 		OMT::Point p[3];
 		OMT::Point t[3];
 		int i = 0;
-		if (property(usingtext, f_it.handle()) != 999) {
+		if (property(usingtext, f_it.handle()) != "NULL") {
 			glEnable(GL_TEXTURE_2D);
 			glEnable(GL_BLEND);
 			//glBindTexture(GL_TEXTURE_2D, property(usingtext, f_it.handle()));
-			glBindTexture(GL_TEXTURE_2D, property(usingtext, f_it.handle()));
+			GLuint _textureID = TextureApp::GenTexture((char *)property(usingtext, f_it.handle()).c_str());
+			glBindTexture(GL_TEXTURE_2D, _textureID);
 			glBegin(GL_TRIANGLES);
 			for (OMT::FVIter fv_it = fv_iter(f_it); fv_it; ++fv_it)
 			{
@@ -565,7 +570,7 @@ void Tri_Mesh::RenderTextureOn()
 					}
 				}
 				//glVertex3dv(point(fv_it.handle()).data());
-				std::cout << i << ": " << t[i][0] << " " << t[i][1] << " " << t[i][2] << std::endl;
+				//std::cout << i << ": " << t[i][0] << " " << t[i][1] << " " << t[i][2] << std::endl;
 				i++;
 				//std::cout << p[0] << std::endl;
 				//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
@@ -646,7 +651,6 @@ void Tri_Mesh::Render_SolidWireframe()
 				p[i][j] = point(fv_it.handle()).data()[j];
 			}
 			//glVertex3dv(point(fv_it.handle()).data());
-
 			i++;
 			//std::cout << p[0] << std::endl;
 			//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
@@ -834,40 +838,7 @@ void Tri_Mesh::Parameterize() {
 			count++;
 		}
 		std::cout << "count: " << count << std::endl;
-		/*if (count == 1) {
-			for (int i = 0; i < outerpnts.size(); i++)
-			{
-				if (oneline[i] <= 1) {
-					texturepoint temp;
-					temp.pnt = OMT::Point(oneline[i], 0, 0);
-					temp.texture = currenttexture;
-					plane->property(cogs, outerpnts[i]).push_back(temp);
-					property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
-				}
-				else if (oneline[i] <= 2) {
-					texturepoint temp;
-					temp.pnt = OMT::Point(1, oneline[i] - 1, 0);
-					temp.texture = currenttexture;
-					plane->property(cogs, outerpnts[i]).push_back(temp);
-					property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
-				}
-				else if (oneline[i] <= 3) {
-					texturepoint temp;
-					temp.pnt = OMT::Point(1 - (oneline[i] - 2), 1, 0);
-					temp.texture = currenttexture;
-					plane->property(cogs, outerpnts[i]).push_back(temp);
-					property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
-				}
-				else if (oneline[i] <= 4) {
-					texturepoint temp;
-					temp.pnt = OMT::Point(0, 1 - (oneline[i] - 3), 0);
-					temp.texture = currenttexture;
-					plane->property(cogs, outerpnts[i]).push_back(temp);
-					property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
-				}
-			}
-		}*/
-		//else {
+		
 			for (int i = 0; i < outerpnts.size(); i++)
 			{
 				bool existsinplane = false;

@@ -349,7 +349,14 @@ namespace OpenMesh_EX {
 		}
 		if (e->KeyCode == Keys::Enter)
 		{
+			for (int i = 0; i < faces.size(); i++)
+				mesh->property(mesh->confirmed, faces[i]) = true;
 
+			pnts.clear();
+			faces.clear();
+			mesh->refreshPlane();
+			hkoglPanelControl1->Invalidate();
+			hkoglPanelControl2->Invalidate();
 		}
 	}
 
@@ -405,9 +412,9 @@ namespace OpenMesh_EX {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glPushMatrix();
-
-		glBindTexture(GL_TEXTURE_2D, textures[listBox1->SelectedIndex]);
-
+		if (mesh != NULL) {
+			glBindTexture(GL_TEXTURE_2D, TextureApp::GenTexture((char *)mesh->currenttexture.c_str()));
+		}
 		glBegin(GL_QUADS);
 		glTexCoord2d(0, 0); glVertex2d(-1, -1);
 		glTexCoord2d(1, 0); glVertex2d(1, -1);
@@ -535,7 +542,7 @@ namespace OpenMesh_EX {
 					}
 
 				}
-				if (!faceexists && neighboringface) {
+				if (!faceexists && neighboringface && !mesh->property(mesh->confirmed,currentface)) {
 					std::vector<point> facetemp;
 					for (int i = 0; i < 3; i++)
 						facetemp.push_back(face[i]);
@@ -559,12 +566,13 @@ namespace OpenMesh_EX {
 
 					}
 					mesh->setPlaneFacetoMeshFace(currentface, mesh->plane->add_face(face_vhandles));
+					mesh->setOuterPoints();
+					mesh->setWeight();
+					mesh->Parameterize();
 					hkoglPanelControl2->Invalidate();
 				}
+				
 			}
-			mesh->setOuterPoints();
-			mesh->setWeight();
-			mesh->Parameterize();
 			clicked = false;
 
 		}
@@ -588,7 +596,35 @@ namespace OpenMesh_EX {
 			glEnd();
 		}
 
-
+		if (mesh != NULL) {
+			for (OMT::FIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
+			{
+				point p[3];
+				if (mesh->property(mesh->confirmed, f_it)) {
+					point out[3];
+					int i = 0;
+					glColor3f(0, 255, 0);
+					glBegin(GL_TRIANGLES);
+					for (OMT::FVIter fv_it = mesh->fv_iter(f_it); fv_it; ++fv_it)
+					{
+						//glNormal3dv(normal(fv_it.handle()));
+						for (int j = 0; j < 3; j++)
+							p[i][j] = mesh->point(fv_it.handle()).data()[j];
+						for (int j = 0; j < 3; j++)
+							out[i] = xf * p[i];
+						
+						//glVertex3dv(point(fv_it.handle()).data());
+						i++;
+						//std::cout << p[0] << std::endl;
+						//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
+					}
+					glVertex3f(out[0][0], out[0][1], out[0][2] + 0.0001);
+					glVertex3f(out[1][0], out[1][1], out[1][2] + 0.0001);
+					glVertex3f(out[2][0], out[2][1], out[2][2] + 0.0001);
+					glEnd();
+				}
+			}
+		}
 
 		/*glPointSize(8.0);
 		glBegin(GL_POINTS);
@@ -802,7 +838,8 @@ namespace OpenMesh_EX {
 		listBox1->Items->Add(openTextureDialog->FileName);
 		char *f = new char[filename.length() + 1];
 		strcpy(f, filename.c_str());
-		textures[textureNum] = TextureApp::GenTexture(f);
+		//textures[textureNum] = TextureApp::GenTexture(f);
+		mesh->addTexture(filename);
 		textureNames[textureNum] = filename;
 		std::cout << "texture index: " << textureNum << std::endl;
 		textureNum++;
@@ -844,7 +881,7 @@ namespace OpenMesh_EX {
 		if (listBox1->SelectedIndex != -1) {
 			if (mesh != NULL) {
 				std::string filename = textureNames[listBox1->SelectedIndex];
-				mesh->addTexture(filename);
+				//mesh->addTexture(filename);
 			}
 		}
 	}
