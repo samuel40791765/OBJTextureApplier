@@ -248,6 +248,7 @@ public:
 	OpenMesh::FPropHandleT<int> usingtext;
 	GLuint currenttexture;
 
+	void refreshPlane();
 	void Render_Solid();
 	void setPoint(GLfloat p1, GLfloat p2, GLfloat p3);
 	void initTexture();
@@ -267,7 +268,11 @@ public:
 private:
 	Point clickPoint;
 	std::vector<GLuint> textures;
-	OpenMesh::VPropHandleT<OMT::Point> cogs;
+	struct texturepoint {
+		GLuint texture;
+		OMT::Point pnt;
+	};
+	OpenMesh::VPropHandleT<std::vector<texturepoint>> cogs;
 	OpenMesh::VPropHandleT<OMT::VHandle> planetomesh;
 	
 	std::vector<OMT::VHandle> outerpnts;

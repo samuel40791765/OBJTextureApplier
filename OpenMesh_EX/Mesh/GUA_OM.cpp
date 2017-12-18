@@ -507,11 +507,21 @@ void Tri_Mesh::initTexture()
 		property(usingtext, f_it.handle()) = 999;
 	}
 }
+
+void Tri_Mesh::refreshPlane() {
+	delete plane;
+	plane = new Tri_Mesh;
+	plane->add_property(cogs);
+	plane->add_property(planetomesh);
+	outerpnts.clear();
+	innerpnts.clear();
+	weights.clear();
+}
 void Tri_Mesh::addTexture(std::string filename)
 {
 	char *f = new char[filename.length() + 1];
 	strcpy(f, filename.c_str());
-	textures.push_back(TextureApp::GenTexture(f));
+	//textures.push_back(TextureApp::GenTexture(f));
 	currenttexture = TextureApp::GenTexture(f);
 	//currenttexture = textures[textures.size() - 1];
 }
@@ -540,14 +550,19 @@ void Tri_Mesh::RenderTextureOn()
 			glEnable(GL_TEXTURE_2D);
 			glEnable(GL_BLEND);
 			//glBindTexture(GL_TEXTURE_2D, property(usingtext, f_it.handle()));
-			glBindTexture(GL_TEXTURE_2D, currenttexture);
+			glBindTexture(GL_TEXTURE_2D, property(usingtext, f_it.handle()));
 			glBegin(GL_TRIANGLES);
 			for (OMT::FVIter fv_it = fv_iter(f_it); fv_it; ++fv_it)
 			{
 				//glNormal3dv(normal(fv_it.handle()));
-				for (int j = 0; j < 3; j++) {
-					t[i][j] = property(cogs, fv_it.handle())[j];
-					p[i][j] = point(fv_it.handle()).data()[j];
+				
+				for (int k = 0; k < property(cogs, fv_it.handle()).size(); k++) {			
+					if (property(cogs, fv_it.handle())[k].texture == property(usingtext, f_it.handle())) {
+						for (int j = 0; j < 3; j++) {
+							t[i][j] = property(cogs, fv_it.handle())[k].pnt[j];
+							p[i][j] = point(fv_it.handle()).data()[j];
+						}
+					}
 				}
 				//glVertex3dv(point(fv_it.handle()).data());
 				std::cout << i << ": " << t[i][0] << " " << t[i][1] << " " << t[i][2] << std::endl;
@@ -556,17 +571,6 @@ void Tri_Mesh::RenderTextureOn()
 				//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
 			}
 			std::cout << std::endl;
-			std::cout << "outer: " << std::endl;
-			for (int i = 0; i < outerpnts.size(); i++) {
-				std::cout << i << ": " << plane->point(outerpnts[i]).data()[0] << " " << plane->point(outerpnts[i]).data()[1] << " " << plane->point(outerpnts[i]).data()[2];
-				std::cout << " 2D: " << plane->property(cogs, outerpnts[i])[0] << " " << plane->property(cogs, outerpnts[i])[1] << " " << plane->property(cogs, outerpnts[i])[2] << std::endl;
-			}
-			std::cout << "inner: " << std::endl;
-			for (int i = 0; i < innerpnts.size(); i++) {
-				std::cout << i << ": " << plane->point(innerpnts[i]).data()[0] << " " << plane->point(innerpnts[i]).data()[1] << " " << plane->point(innerpnts[i]).data()[2];
-				std::cout << " 2D: " << plane->property(cogs, innerpnts[i])[0] << " " << plane->property(cogs, innerpnts[i])[1] << " " << plane->property(cogs, innerpnts[i])[2] << std::endl;
-			}
-
 			glTexCoord2d(1 - t[0][0], t[0][1]); glVertex3f(p[0][0], p[0][1], p[0][2]);
 			glTexCoord2d(1 - t[1][0], t[1][1]); glVertex3f(p[1][0], p[1][1], p[1][2]);
 			glTexCoord2d(1 - t[2][0], t[2][1]); glVertex3f(p[2][0], p[2][1], p[2][2]);
@@ -736,13 +740,13 @@ void Tri_Mesh::setOuterPoints() {
 				break;
 			}
 		}
-		// We can do this as often as we want:
+		// We n do this as often as we want:
 		while (heh != heh_init) {
 			for (OMT::VOHEIter voh_it = plane->voh_iter(heh); voh_it; ++voh_it) {
 				// Iterate over all outgoing halfedges...
 				bool exists = false;
 				for (int i = 0; i < outerpnts.size(); i++) {
-					if (plane->to_vertex_handle(plane->halfedge_handle(voh_it)) == outerpnts[i]) {
+					if (plane->to_vertex_handle(voh_it) == outerpnts[i]) {
 						exists = true;
 						break;
 					}
@@ -825,26 +829,127 @@ void Tri_Mesh::Parameterize() {
 
 		// smoothing mesh argv[1] times
 		OMT::Point               cog;
-		for (int i = 0; i < outerpnts.size(); i++)
-		{
-			plane->property(cogs, outerpnts[i]).vectorize(0.0f);
-			if (oneline[i] <= 1) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(oneline[i], 0, 0);
-				property(cogs, plane->property(planetomesh, outerpnts[i])) = OMT::Point(oneline[i], 0, 0);
-			}
-			else if (oneline[i] <= 2) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(1, oneline[i] - 1, 0);
-				property(cogs, plane->property(planetomesh, outerpnts[i])) = OMT::Point(1, oneline[i] - 1, 0);
-			}
-			else if (oneline[i] <= 3) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(1 - (oneline[i] - 2), 1, 0);
-				property(cogs, plane->property(planetomesh, outerpnts[i])) = OMT::Point(1 - (oneline[i] - 2), 1, 0);
-			}
-			else if (oneline[i] <= 4) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(0, 1 - (oneline[i] - 3), 0);
-				property(cogs, plane->property(planetomesh, outerpnts[i])) = OMT::Point(0, 1 - (oneline[i] - 3), 0);
-			}
+		int count = 0;
+		for (OMT::FIter f_it = plane->faces_begin(); f_it != plane->faces_end(); ++f_it) {
+			count++;
 		}
+		std::cout << "count: " << count << std::endl;
+		/*if (count == 1) {
+			for (int i = 0; i < outerpnts.size(); i++)
+			{
+				if (oneline[i] <= 1) {
+					texturepoint temp;
+					temp.pnt = OMT::Point(oneline[i], 0, 0);
+					temp.texture = currenttexture;
+					plane->property(cogs, outerpnts[i]).push_back(temp);
+					property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
+				}
+				else if (oneline[i] <= 2) {
+					texturepoint temp;
+					temp.pnt = OMT::Point(1, oneline[i] - 1, 0);
+					temp.texture = currenttexture;
+					plane->property(cogs, outerpnts[i]).push_back(temp);
+					property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
+				}
+				else if (oneline[i] <= 3) {
+					texturepoint temp;
+					temp.pnt = OMT::Point(1 - (oneline[i] - 2), 1, 0);
+					temp.texture = currenttexture;
+					plane->property(cogs, outerpnts[i]).push_back(temp);
+					property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
+				}
+				else if (oneline[i] <= 4) {
+					texturepoint temp;
+					temp.pnt = OMT::Point(0, 1 - (oneline[i] - 3), 0);
+					temp.texture = currenttexture;
+					plane->property(cogs, outerpnts[i]).push_back(temp);
+					property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
+				}
+			}
+		}*/
+		//else {
+			for (int i = 0; i < outerpnts.size(); i++)
+			{
+				bool existsinplane = false;
+				bool existsinmesh = false;
+				int j;
+				int mj;
+				//add into plane
+				for ( j = 0; j < plane->property(cogs, outerpnts[i]).size(); j++) {
+					if (plane->property(cogs, outerpnts[i])[j].texture == currenttexture) {
+						existsinplane = true;
+						break;
+					}
+				}
+				for (mj = 0; mj < property(cogs, plane->property(planetomesh, outerpnts[i])).size(); mj++) {
+					if (property(cogs, plane->property(planetomesh, outerpnts[i]))[mj].texture == currenttexture) {
+						existsinmesh = true;
+						break;
+					}
+				}
+				if (existsinplane) {
+					if (oneline[i] <= 1) 
+						plane->property(cogs, outerpnts[i])[j].pnt = OMT::Point(oneline[i], 0, 0);
+					else if (oneline[i] <= 2) 
+						plane->property(cogs, outerpnts[i])[j].pnt = OMT::Point(1, oneline[i] - 1, 0);		
+					else if (oneline[i] <= 3) 
+						plane->property(cogs, outerpnts[i])[j].pnt = OMT::Point(1 - (oneline[i] - 2), 1, 0);
+					else if (oneline[i] <= 4) 
+						plane->property(cogs, outerpnts[i])[j].pnt = OMT::Point(0, 1 - (oneline[i] - 3), 0);
+				}
+				else {
+					texturepoint temp;
+					temp.texture = currenttexture;
+					if (oneline[i] <= 1) {
+						temp.pnt = OMT::Point(oneline[i], 0, 0);
+						plane->property(cogs, outerpnts[i]).push_back(temp);
+					}
+					else if (oneline[i] <= 2) {
+						temp.pnt = OMT::Point(1, oneline[i] - 1, 0);
+						plane->property(cogs, outerpnts[i]).push_back(temp);
+					}
+					else if (oneline[i] <= 3) {
+						temp.pnt = OMT::Point(1 - (oneline[i] - 2), 1, 0);
+						plane->property(cogs, outerpnts[i]).push_back(temp);
+					}
+					else if (oneline[i] <= 4) {
+						temp.pnt = OMT::Point(0, 1 - (oneline[i] - 3), 0);
+						plane->property(cogs, outerpnts[i]).push_back(temp);
+					}
+				}
+
+				if (existsinmesh) {
+					if (oneline[i] <= 1) 
+						property(cogs, plane->property(planetomesh, outerpnts[i]))[mj].pnt = OMT::Point(oneline[i], 0, 0);
+					else if (oneline[i] <= 2) 
+						property(cogs, plane->property(planetomesh, outerpnts[i]))[mj].pnt = OMT::Point(1, oneline[i] - 1, 0);
+					else if (oneline[i] <= 3) 
+						property(cogs, plane->property(planetomesh, outerpnts[i]))[mj].pnt = OMT::Point(1 - (oneline[i] - 2), 1, 0);
+					else if (oneline[i] <= 4) 
+						property(cogs, plane->property(planetomesh, outerpnts[i]))[mj].pnt = OMT::Point(0, 1 - (oneline[i] - 3), 0);
+				}
+				else {
+					texturepoint temp;
+					temp.texture = currenttexture;
+					if (oneline[i] <= 1) {
+						temp.pnt = OMT::Point(oneline[i], 0, 0);
+						property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
+					}
+					else if (oneline[i] <= 2) {
+						temp.pnt = OMT::Point(1, oneline[i] - 1, 0);
+						property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
+					}
+					else if (oneline[i] <= 3) {
+						temp.pnt = OMT::Point(1 - (oneline[i] - 2), 1, 0);
+						property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
+					}
+					else if (oneline[i] <= 4) {
+						temp.pnt = OMT::Point(0, 1 - (oneline[i] - 3), 0);
+						property(cogs, plane->property(planetomesh, outerpnts[i])).push_back(temp);
+					}
+				}
+			}
+		
 
 		if (innerpnts.size() > 0) {
 			SparseMatrix<double> A(innerpnts.size(), innerpnts.size());
@@ -883,8 +988,8 @@ void Tri_Mesh::Parameterize() {
 					int k = 0;
 					for (OMT::VVIter vvit = plane->vv_iter(innerpnts[i]); vvit; ++vvit) {
 						if (vvit.handle() == outerpnts[j]) {
-							outerweightx += weights[i][k] * plane->property(cogs, outerpnts[j])[0];
-							outerweighty += weights[i][k] * plane->property(cogs, outerpnts[j])[1];
+							outerweightx += weights[i][k] * plane->property(cogs, outerpnts[j])[plane->property(cogs, outerpnts[j]).size() - 1].pnt[0];
+							outerweighty += weights[i][k] * plane->property(cogs, outerpnts[j])[plane->property(cogs, outerpnts[j]).size() - 1].pnt[1];
 							break;
 						}
 						k++;
@@ -903,12 +1008,22 @@ void Tri_Mesh::Parameterize() {
 			X[0] = linearSolver.solve(B[0]);
 			X[1] = linearSolver.solve(B[1]);
 
-
-			for (int i = 0; i < innerpnts.size(); i++) {
-				plane->property(cogs, innerpnts[i]).vectorize(0.0f);
-				plane->property(cogs, innerpnts[i]) = OMT::Point(X[0][i], X[1][i], 0);
-				property(cogs, plane->property(planetomesh, innerpnts[i])) = OMT::Point(X[0][i], X[1][i], 0);
+			if (count == 1) {
+				for (int i = 0; i < innerpnts.size(); i++) {
+					texturepoint temp;
+					temp.pnt = OMT::Point(X[0][i], X[1][i], 0);
+					temp.texture = currenttexture;
+					plane->property(cogs, innerpnts[i]).push_back(temp);
+					property(cogs, plane->property(planetomesh, innerpnts[i])).push_back(temp);
+				}
 			}
+			else {
+				for (int i = 0; i < innerpnts.size(); i++) {
+					plane->property(cogs, innerpnts[i])[plane->property(cogs, innerpnts[i]).size() - 1].pnt = OMT::Point(X[0][i], X[1][i], 0);
+					property(cogs, plane->property(planetomesh, innerpnts[i]))[property(cogs, plane->property(planetomesh, innerpnts[i])).size() - 1].pnt = OMT::Point(X[0][i], X[1][i], 0);
+				}
+			}
+			
 		}
 		/*for (v_it = mesh.vertices_begin(); v_it != v_end; ++v_it)
 		if (!mesh.is_boundary(*v_it))
@@ -946,10 +1061,7 @@ void Tri_Mesh::setPlaneFacetoMeshFace(OMT::FHandle face, OMT::FHandle planeface)
 		}
 	}
 	property(usingtext, face) = currenttexture;
-		//plane->add_face(face_vhandles);
-		for (OMT::FVIter fv_it = fv_iter(face); fv_it; ++fv_it) {
-
-		}
+	
 }
 
 double Tri_Mesh::calcAngle(OMT::Point pnt1, OMT::Point pnt2) {

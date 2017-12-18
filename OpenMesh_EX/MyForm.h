@@ -29,7 +29,6 @@ namespace OpenMesh_EX {
 	xform xf;
 	xform xfpanel;
 	GLCamera camera;
-	GLCamera camera2;
 	float fov = 0.7f;
 	std::vector<float> y;
 	point points;
@@ -294,12 +293,10 @@ namespace OpenMesh_EX {
 		if (e->KeyCode == Keys::Space)
 		{
 			pnts.clear();
-			delete mesh->plane;
-			mesh->plane = new Tri_Mesh;
+			faces.clear();
+			mesh->refreshPlane();
 			hkoglPanelControl1->Invalidate();
 			hkoglPanelControl2->Invalidate();
-			faces.clear();
-
 		}
 		if (e->KeyCode == Keys::Enter)
 		{
@@ -317,15 +314,13 @@ namespace OpenMesh_EX {
 		center[0] = 0.0;
 		center[1] = 0.0;
 		center[2] = 0.0;
-		camera2.setupGL(xfpanel * center, 1.0);
+		camera.setupGL(xfpanel * center, 1.0);
 
 		glPushMatrix();
 		glMatrixMode(GL_MODELVIEW);
 		glMultMatrixd((double *)xfpanel);
 		if (mesh != NULL) {
-			mesh->setOuterPoints();
-			mesh->setWeight();
-			mesh->Parameterize();
+			
 			mesh->RenderTextureOn();
 			/*std::cout << "outer: " << std::endl;
 			for (int i = 0; i < outerpnts.size(); i++) {
@@ -483,7 +478,11 @@ namespace OpenMesh_EX {
 					hkoglPanelControl2->Invalidate();
 				}
 			}
+			mesh->setOuterPoints();
+			mesh->setWeight();
+			mesh->Parameterize();
 			clicked = false;
+
 		}
 
 		point realnear = xf*nearest;
@@ -605,7 +604,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 		}
@@ -620,7 +619,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 
@@ -634,7 +633,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 			hkoglPanelControl2->Invalidate();
@@ -649,7 +648,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 			hkoglPanelControl2->Invalidate();
@@ -661,7 +660,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 			hkoglPanelControl2->Invalidate();
@@ -706,12 +705,15 @@ namespace OpenMesh_EX {
 	{
 		std::string filename;
 		MarshalString(openTextureDialog->FileName, filename);
-		std::cout << "open texture" << std::endl;
+		std::cout << "Open Texture" << std::endl;
 		std::cout << filename << std::endl;
 		//plane->initTexture();
-		this->textboxToolStripMenuItem->Text = "¥Ø«etexture: " + openTextureDialog->FileName;
+		this->textboxToolStripMenuItem->Text = "Current Texture: " + openTextureDialog->FileName;
 		if (mesh != NULL) {
 			mesh->addTexture(filename);
+			pnts.clear();
+			faces.clear();
+			mesh->refreshPlane();
 		}
 
 		hkoglPanelControl1->Invalidate();
