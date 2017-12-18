@@ -1,5 +1,4 @@
 #pragma once
-
 #include "DotNetUtilities.h"
 #include "Mesh/GUA_OM.h"
 #include "Mesh/DP.h"
@@ -7,12 +6,8 @@
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 #include <OpenMesh/Tools/Utils/getopt.h>
-
 #include <vector>
-#include <Eigen\Sparse>
-#define PI 3.14159265
 
-using namespace Eigen;
 
 
 static const Mouse::button physical_to_logical_map[] = {
@@ -31,23 +26,20 @@ namespace OpenMesh_EX {
 	using namespace System::Data;
 	using namespace System::Drawing;
 	Tri_Mesh *mesh;
-	Tri_Mesh *plane;
 	xform xf;
 	xform xfpanel;
 	GLCamera camera;
-	GLCamera camera2;
 	float fov = 0.7f;
 	std::vector<float> y;
 	point points;
 	point nearest;
 	bool clicked = false;
-	OpenMesh::VPropHandleT<OMT::Point> cogs;
+	//OpenMesh::VPropHandleT<OMT::Point> cogs;
 	std::vector<std::vector<point>> pnts;
 	std::vector<OMT::FIter> faces;
-	std::vector<OMT::VHandle> outerpnts;
-	std::vector<OMT::VHandle> innerpnts;
-	std::vector<std::vector<double>> weights;
+	
 	Mouse::button Mouse_State = Mouse::ROTATE;
+
 
 	/// <summary>
 	/// MyForm 的摘要
@@ -58,6 +50,7 @@ namespace OpenMesh_EX {
 		MyForm(void)
 		{
 			InitializeComponent();
+			InitializeTexture();
 			//
 			//TODO:  在此加入建構函式程式碼
 			//
@@ -79,11 +72,17 @@ namespace OpenMesh_EX {
 	private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  loadModelToolStripMenuItem;
 	private: System::Windows::Forms::OpenFileDialog^  openModelDialog;
+	private: System::Windows::Forms::OpenFileDialog^  openTextureDialog;
 	private: System::Windows::Forms::SaveFileDialog^  saveModelDialog;
 	private: System::Windows::Forms::ToolStripMenuItem^  saveModelToolStripMenuItem;
 	private: HKOGLPanel::HKOGLPanelControl^  hkoglPanelControl1;
 	private: HKOGLPanel::HKOGLPanelControl^  hkoglPanelControl2;
 	private: Form^ newpanel;
+	private: System::Windows::Forms::ToolStripComboBox^  toolStripComboBox1;
+	private: System::Windows::Forms::ToolStripMenuItem^  textureToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  loadTextureToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  textboxToolStripMenuItem;
+
 	protected:
 
 	private:
@@ -99,15 +98,20 @@ namespace OpenMesh_EX {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			HKOGLPanel::HKCOGLPanelCameraSetting^  hkcoglPanelCameraSetting5 = (gcnew HKOGLPanel::HKCOGLPanelCameraSetting());
-			HKOGLPanel::HKCOGLPanelPixelFormat^  hkcoglPanelPixelFormat5 = (gcnew HKOGLPanel::HKCOGLPanelPixelFormat());
-			HKOGLPanel::HKCOGLPanelCameraSetting^  hkcoglPanelCameraSetting6 = (gcnew HKOGLPanel::HKCOGLPanelCameraSetting());
-			HKOGLPanel::HKCOGLPanelPixelFormat^  hkcoglPanelPixelFormat6 = (gcnew HKOGLPanel::HKCOGLPanelPixelFormat());
+			HKOGLPanel::HKCOGLPanelCameraSetting^  hkcoglPanelCameraSetting1 = (gcnew HKOGLPanel::HKCOGLPanelCameraSetting());
+			HKOGLPanel::HKCOGLPanelPixelFormat^  hkcoglPanelPixelFormat1 = (gcnew HKOGLPanel::HKCOGLPanelPixelFormat());
+			HKOGLPanel::HKCOGLPanelCameraSetting^  hkcoglPanelCameraSetting2 = (gcnew HKOGLPanel::HKCOGLPanelCameraSetting());
+			HKOGLPanel::HKCOGLPanelPixelFormat^  hkcoglPanelPixelFormat2 = (gcnew HKOGLPanel::HKCOGLPanelPixelFormat());
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->loadModelToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->saveModelToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->toolStripComboBox1 = (gcnew System::Windows::Forms::ToolStripComboBox());
+			this->textureToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->loadTextureToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->textboxToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->openModelDialog = (gcnew System::Windows::Forms::OpenFileDialog());
+			this->openTextureDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->saveModelDialog = (gcnew System::Windows::Forms::SaveFileDialog());
 			this->hkoglPanelControl1 = (gcnew HKOGLPanel::HKOGLPanelControl());
 			this->hkoglPanelControl2 = (gcnew HKOGLPanel::HKOGLPanelControl());
@@ -117,11 +121,13 @@ namespace OpenMesh_EX {
 			// menuStrip1
 			// 
 			this->menuStrip1->ImageScalingSize = System::Drawing::Size(32, 32);
-			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->fileToolStripMenuItem });
+			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(4) {
+				this->fileToolStripMenuItem,
+					this->toolStripComboBox1, this->textureToolStripMenuItem, this->textboxToolStripMenuItem
+			});
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
 			this->menuStrip1->Name = L"menuStrip1";
-			this->menuStrip1->Padding = System::Windows::Forms::Padding(12, 4, 0, 4);
-			this->menuStrip1->Size = System::Drawing::Size(2034, 44);
+			this->menuStrip1->Size = System::Drawing::Size(1017, 27);
 			this->menuStrip1->TabIndex = 1;
 			this->menuStrip1->Text = L"menuStrip1";
 			// 
@@ -132,26 +138,56 @@ namespace OpenMesh_EX {
 					this->saveModelToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
-			this->fileToolStripMenuItem->Size = System::Drawing::Size(64, 36);
+			this->fileToolStripMenuItem->Size = System::Drawing::Size(38, 23);
 			this->fileToolStripMenuItem->Text = L"File";
 			// 
 			// loadModelToolStripMenuItem
 			// 
 			this->loadModelToolStripMenuItem->Name = L"loadModelToolStripMenuItem";
-			this->loadModelToolStripMenuItem->Size = System::Drawing::Size(268, 38);
+			this->loadModelToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->loadModelToolStripMenuItem->Text = L"Load Model";
 			this->loadModelToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::loadModelToolStripMenuItem_Click);
 			// 
 			// saveModelToolStripMenuItem
 			// 
 			this->saveModelToolStripMenuItem->Name = L"saveModelToolStripMenuItem";
-			this->saveModelToolStripMenuItem->Size = System::Drawing::Size(268, 38);
+			this->saveModelToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->saveModelToolStripMenuItem->Text = L"Save Model";
 			this->saveModelToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::saveModelToolStripMenuItem_Click);
+			// 
+			// toolStripComboBox1
+			// 
+			this->toolStripComboBox1->Name = L"toolStripComboBox1";
+			this->toolStripComboBox1->Size = System::Drawing::Size(121, 23);
+			this->toolStripComboBox1->Click += gcnew System::EventHandler(this, &MyForm::toolStripComboBox1_Click);
+			// 
+			// textureToolStripMenuItem
+			// 
+			this->textureToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->loadTextureToolStripMenuItem });
+			this->textureToolStripMenuItem->Name = L"textureToolStripMenuItem";
+			this->textureToolStripMenuItem->Size = System::Drawing::Size(61, 23);
+			this->textureToolStripMenuItem->Text = L"Texture";
+			// 
+			// loadTextureToolStripMenuItem
+			// 
+			this->loadTextureToolStripMenuItem->Name = L"loadTextureToolStripMenuItem";
+			this->loadTextureToolStripMenuItem->Size = System::Drawing::Size(142, 22);
+			this->loadTextureToolStripMenuItem->Text = L"loadTexture";
+			this->loadTextureToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::loadTextureToolStripMenuItem_Click);
+			// 
+			// textboxToolStripMenuItem
+			// 
+			this->textboxToolStripMenuItem->Name = L"textboxToolStripMenuItem";
+			this->textboxToolStripMenuItem->Size = System::Drawing::Size(88, 23);
+			this->textboxToolStripMenuItem->Text = L"目前texture: ";
 			// 
 			// openModelDialog
 			// 
 			this->openModelDialog->FileOk += gcnew System::ComponentModel::CancelEventHandler(this, &MyForm::openModelDialog_FileOk);
+			// 
+			// openTextureDialog
+			// 
+			this->openTextureDialog->FileOk += gcnew System::ComponentModel::CancelEventHandler(this, &MyForm::openTextureDialog_FileOk);
 			// 
 			// saveModelDialog
 			// 
@@ -160,19 +196,18 @@ namespace OpenMesh_EX {
 			// 
 			// hkoglPanelControl1
 			// 
-			hkcoglPanelCameraSetting5->Far = 1000;
-			hkcoglPanelCameraSetting5->Fov = 45;
-			hkcoglPanelCameraSetting5->Near = -1000;
-			hkcoglPanelCameraSetting5->Type = HKOGLPanel::HKCOGLPanelCameraSetting::CAMERATYPE::ORTHOGRAPHIC;
-			this->hkoglPanelControl1->Camera_Setting = hkcoglPanelCameraSetting5;
-			this->hkoglPanelControl1->Location = System::Drawing::Point(0, 36);
-			this->hkoglPanelControl1->Margin = System::Windows::Forms::Padding(6, 6, 6, 6);
+			hkcoglPanelCameraSetting1->Far = 1000;
+			hkcoglPanelCameraSetting1->Fov = 45;
+			hkcoglPanelCameraSetting1->Near = -1000;
+			hkcoglPanelCameraSetting1->Type = HKOGLPanel::HKCOGLPanelCameraSetting::CAMERATYPE::ORTHOGRAPHIC;
+			this->hkoglPanelControl1->Camera_Setting = hkcoglPanelCameraSetting1;
+			this->hkoglPanelControl1->Location = System::Drawing::Point(0, 30);
 			this->hkoglPanelControl1->Name = L"hkoglPanelControl1";
-			hkcoglPanelPixelFormat5->Accumu_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
-			hkcoglPanelPixelFormat5->Alpha_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
-			hkcoglPanelPixelFormat5->Stencil_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
-			this->hkoglPanelControl1->Pixel_Format = hkcoglPanelPixelFormat5;
-			this->hkoglPanelControl1->Size = System::Drawing::Size(993, 918);
+			hkcoglPanelPixelFormat1->Accumu_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
+			hkcoglPanelPixelFormat1->Alpha_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
+			hkcoglPanelPixelFormat1->Stencil_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
+			this->hkoglPanelControl1->Pixel_Format = hkcoglPanelPixelFormat1;
+			this->hkoglPanelControl1->Size = System::Drawing::Size(496, 441);
 			this->hkoglPanelControl1->TabIndex = 2;
 			this->hkoglPanelControl1->Load += gcnew System::EventHandler(this, &MyForm::hkoglPanelControl1_Load);
 			this->hkoglPanelControl1->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &MyForm::hkoglPanelControl1_Paint);
@@ -183,19 +218,18 @@ namespace OpenMesh_EX {
 			// 
 			// hkoglPanelControl2
 			// 
-			hkcoglPanelCameraSetting6->Far = 1000;
-			hkcoglPanelCameraSetting6->Fov = 45;
-			hkcoglPanelCameraSetting6->Near = -1000;
-			hkcoglPanelCameraSetting6->Type = HKOGLPanel::HKCOGLPanelCameraSetting::CAMERATYPE::ORTHOGRAPHIC;
-			this->hkoglPanelControl2->Camera_Setting = hkcoglPanelCameraSetting6;
-			this->hkoglPanelControl2->Location = System::Drawing::Point(1038, 36);
-			this->hkoglPanelControl2->Margin = System::Windows::Forms::Padding(6, 6, 6, 6);
+			hkcoglPanelCameraSetting2->Far = 1000;
+			hkcoglPanelCameraSetting2->Fov = 45;
+			hkcoglPanelCameraSetting2->Near = -1000;
+			hkcoglPanelCameraSetting2->Type = HKOGLPanel::HKCOGLPanelCameraSetting::CAMERATYPE::ORTHOGRAPHIC;
+			this->hkoglPanelControl2->Camera_Setting = hkcoglPanelCameraSetting2;
+			this->hkoglPanelControl2->Location = System::Drawing::Point(521, 30);
 			this->hkoglPanelControl2->Name = L"hkoglPanelControl2";
-			hkcoglPanelPixelFormat6->Accumu_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
-			hkcoglPanelPixelFormat6->Alpha_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
-			hkcoglPanelPixelFormat6->Stencil_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
-			this->hkoglPanelControl2->Pixel_Format = hkcoglPanelPixelFormat6;
-			this->hkoglPanelControl2->Size = System::Drawing::Size(993, 918);
+			hkcoglPanelPixelFormat2->Accumu_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
+			hkcoglPanelPixelFormat2->Alpha_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
+			hkcoglPanelPixelFormat2->Stencil_Buffer_Bits = HKOGLPanel::HKCOGLPanelPixelFormat::PIXELBITS::BITS_0;
+			this->hkoglPanelControl2->Pixel_Format = hkcoglPanelPixelFormat2;
+			this->hkoglPanelControl2->Size = System::Drawing::Size(496, 441);
 			this->hkoglPanelControl2->TabIndex = 3;
 			this->hkoglPanelControl2->Load += gcnew System::EventHandler(this, &MyForm::hkoglPanelControl1_Load);
 			this->hkoglPanelControl2->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &MyForm::panel_Paint);
@@ -206,15 +240,14 @@ namespace OpenMesh_EX {
 			// 
 			// MyForm
 			// 
-			this->AutoScaleDimensions = System::Drawing::SizeF(12, 25);
+			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->AutoSize = true;
-			this->ClientSize = System::Drawing::Size(2034, 1020);
+			this->ClientSize = System::Drawing::Size(1017, 490);
 			this->Controls->Add(this->hkoglPanelControl1);
 			this->Controls->Add(this->hkoglPanelControl2);
 			this->Controls->Add(this->menuStrip1);
 			this->MainMenuStrip = this->menuStrip1;
-			this->Margin = System::Windows::Forms::Padding(6, 6, 6, 6);
 			this->Name = L"MyForm";
 			this->Text = L"OpenMesh_EX";
 			this->Load += gcnew System::EventHandler(this, &MyForm::MyForm_Load);
@@ -222,6 +255,30 @@ namespace OpenMesh_EX {
 			this->menuStrip1->PerformLayout();
 			this->ResumeLayout(false);
 			this->PerformLayout();
+
+		}
+		void InitializeTexture(void) {
+			//
+			//
+			//comboBox
+			array<String^>^ employees = { "Hamilton, David","Hensien, Kari",
+				"Hammond, Maria","Harris, Keith","Henshaw, Jeff D.",
+				"Hanson, Mark","Harnpadoungsataya, Sariya",
+				"Harrington, Mark","Harris, Keith","Hartwig, Doris",
+				"Harui, Roger","Hassall, Mark","Hasselberg, Jonas",
+				"Harnpadoungsataya, Sariya","Henshaw, Jeff D.",
+				"Henshaw, Jeff D.","Hensien, Kari","Harris, Keith",
+				"Henshaw, Jeff D.","Hensien, Kari","Hasselberg, Jonas",
+				"Harrington, Mark","Hedlund, Magnus","Hay, Jeff",
+				"Heidepriem, Brandon D." };
+			this->toolStripComboBox1->Items->AddRange(employees);
+			this->toolStripComboBox1->IntegralHeight = false;
+			this->toolStripComboBox1->MaxDropDownItems = 5;
+			this->toolStripComboBox1->DropDownStyle = ComboBoxStyle::DropDownList;
+			//
+			//
+			//menuitem
+
 
 		}
 #pragma endregion
@@ -236,11 +293,10 @@ namespace OpenMesh_EX {
 		if (e->KeyCode == Keys::Space)
 		{
 			pnts.clear();
-			plane = NULL;
+			faces.clear();
+			mesh->refreshPlane();
 			hkoglPanelControl1->Invalidate();
 			hkoglPanelControl2->Invalidate();
-			faces.clear();
-
 		}
 		if (e->KeyCode == Keys::Enter)
 		{
@@ -258,17 +314,15 @@ namespace OpenMesh_EX {
 		center[0] = 0.0;
 		center[1] = 0.0;
 		center[2] = 0.0;
-		camera2.setupGL(xfpanel * center, 1.0);
+		camera.setupGL(xfpanel * center, 1.0);
 
 		glPushMatrix();
 		glMatrixMode(GL_MODELVIEW);
 		glMultMatrixd((double *)xfpanel);
-		if (plane != NULL) {
-			plane->Render_SolidWireframe();
-			setOuterPoints();
-			setWeight();
-			Parameterize();
-			std::cout <<"outer: "<<std::endl;
+		if (mesh != NULL) {
+			
+			mesh->RenderTextureOn();
+			/*std::cout << "outer: " << std::endl;
 			for (int i = 0; i < outerpnts.size(); i++) {
 				std::cout << i << ": " << plane->point(outerpnts[i]).data()[0] << " " << plane->point(outerpnts[i]).data()[1] << " " << plane->point(outerpnts[i]).data()[2];
 				std::cout << " 2D: " << plane->property(cogs, outerpnts[i])[0] << " " << plane->property(cogs, outerpnts[i])[1] << " " << plane->property(cogs, outerpnts[i])[2] << std::endl;
@@ -277,19 +331,12 @@ namespace OpenMesh_EX {
 			for (int i = 0; i < innerpnts.size(); i++) {
 				std::cout << i << ": " << plane->point(innerpnts[i]).data()[0] << " " << plane->point(innerpnts[i]).data()[1] << " " << plane->point(innerpnts[i]).data()[2];
 				std::cout << " 2D: " << plane->property(cogs, innerpnts[i])[0] << " " << plane->property(cogs, innerpnts[i])[1] << " " << plane->property(cogs, innerpnts[i])[2] << std::endl;
-			}
-			std::cout << std::endl;
+			}*/
+			//std::cout << std::endl;
 			//turn the points around the faces into Viterators
-		}
-		if (plane != NULL) {
-			for (OMT::VIter v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it)
-			{
-				//std::cout << v_it << ": " << plane->point(v_it.handle()).data()[0] << " " << plane->point(v_it.handle()).data()[1] << " " << plane->point(v_it.handle()).data()[2] << std::endl;
-			}
 
 		}
-
-
+		
 
 	}
 
@@ -387,8 +434,6 @@ namespace OpenMesh_EX {
 				bool faceexists = false;
 				bool neighboringface = false;
 				if (faces.size() == 0) {
-					plane = new Tri_Mesh;
-					plane->add_property(cogs);
 					neighboringface = true;
 				}
 				for (int i = 0; i < faces.size(); i++) {
@@ -417,8 +462,8 @@ namespace OpenMesh_EX {
 					{
 						OMT::VIter v_it;
 						bool exists = false;
-						for (v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it) {
-							if (plane->point(v_it.handle()) == mesh->point(fv_it.handle())) {
+						for (v_it = mesh->plane->vertices_begin(); v_it != mesh->plane->vertices_end(); ++v_it) {
+							if (mesh->plane->point(v_it.handle()) == mesh->point(fv_it.handle())) {
 								exists = true;
 								break;
 							}
@@ -426,14 +471,18 @@ namespace OpenMesh_EX {
 						if (exists)
 							face_vhandles.push_back(v_it.handle());
 						else
-							face_vhandles.push_back(plane->add_vertex(mesh->point(fv_it.handle())));
+							face_vhandles.push_back(mesh->plane->add_vertex(mesh->point(fv_it.handle())));
+
 					}
-					plane->add_face(face_vhandles);
+					mesh->setPlaneFacetoMeshFace(currentface, mesh->plane->add_face(face_vhandles));
 					hkoglPanelControl2->Invalidate();
 				}
-
 			}
+			mesh->setOuterPoints();
+			mesh->setWeight();
+			mesh->Parameterize();
 			clicked = false;
+
 		}
 
 		point realnear = xf*nearest;
@@ -555,7 +604,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 		}
@@ -570,7 +619,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 
@@ -584,7 +633,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 			hkoglPanelControl2->Invalidate();
@@ -599,7 +648,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 			hkoglPanelControl2->Invalidate();
@@ -611,7 +660,7 @@ namespace OpenMesh_EX {
 			center[0] = 0.0;
 			center[1] = 0.0;
 			center[2] = 0.0;
-			camera2.mouse(e->X, e->Y, Mouse_State,
+			camera.mouse(e->X, e->Y, Mouse_State,
 				xfpanel * center,
 				1.0, xfpanel);
 			hkoglPanelControl2->Invalidate();
@@ -625,6 +674,15 @@ namespace OpenMesh_EX {
 		openModelDialog->Multiselect = false;
 		openModelDialog->ShowDialog();
 	}
+	private: System::Void loadTextureToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e)
+	{
+		openTextureDialog->Filter = "Image Files(*.BMP;*.JPG;*.GIF)|*.BMP;*.JPG;*.GIF";
+		openTextureDialog->Multiselect = false;
+		openTextureDialog->ShowDialog();
+	}
+	private: System::Void toolStripComboBox1_Click(System::Object^  sender, System::EventArgs^  e) {
+
+	}
 	private: System::Void openModelDialog_FileOk(System::Object^  sender, System::ComponentModel::CancelEventArgs^  e)
 	{
 		std::string filename;
@@ -634,11 +692,29 @@ namespace OpenMesh_EX {
 			delete mesh;
 
 		mesh = new Tri_Mesh;
-		plane = new Tri_Mesh;
-		plane->add_property(cogs);
-
+		
 		if (ReadFile(filename, mesh))
 			std::cout << filename << std::endl;
+		mesh->plane = new Tri_Mesh;
+		mesh->initTexture();
+		
+
+		hkoglPanelControl1->Invalidate();
+	}
+	private: System::Void openTextureDialog_FileOk(System::Object^  sender, System::ComponentModel::CancelEventArgs^  e)
+	{
+		std::string filename;
+		MarshalString(openTextureDialog->FileName, filename);
+		std::cout << "Open Texture" << std::endl;
+		std::cout << filename << std::endl;
+		//plane->initTexture();
+		this->textboxToolStripMenuItem->Text = "Current Texture: " + openTextureDialog->FileName;
+		if (mesh != NULL) {
+			mesh->addTexture(filename);
+			pnts.clear();
+			faces.clear();
+			mesh->refreshPlane();
+		}
 
 		hkoglPanelControl1->Invalidate();
 	}
@@ -661,236 +737,6 @@ namespace OpenMesh_EX {
 	}
 
 
-	private: void setOuterPoints() {
-		outerpnts.clear();
-		innerpnts.clear();
-		OMT::VertexHandle heh, heh_init;
-		std::cout << plane->faces_end() << std::endl;
-		for (OMT::VIter v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it) {
-			std::cout <<"start: "<< plane->point(v_it.handle()).data()[0] << " " << plane->point(v_it.handle()).data()[1] << " " << plane->point(v_it.handle()).data()[2] << std::endl;
-			heh = heh_init = v_it.handle();
-			if (plane->is_boundary(heh_init)) 
-				break;
-		}
-		//!((plane->is_boundary(plane->halfedge_handle(voh_it)) && plane->is_boundary(plane->opposite_halfedge_handle(plane->halfedge_handle(voh_it))))) ||
-		for (OMT::VOHEIter voh_it = plane->voh_iter(heh_init); voh_it; ++voh_it) {
-			// Iterate over all outgoing halfedges...
-			if (plane->is_boundary(plane->to_vertex_handle(voh_it))) {
-				heh = plane->to_vertex_handle(voh_it);
-				std::cout << "second: " << plane->point(plane->to_vertex_handle(voh_it))[0] << " " << plane->point(plane->to_vertex_handle(voh_it))[1] << " " << plane->point(plane->to_vertex_handle(voh_it))[2] << std::endl;
-				outerpnts.push_back(heh);
-				break;
-			}
-		}
-		// We can do this as often as we want:
-		while (heh != heh_init) {
-			for (OMT::VOHEIter voh_it = plane->voh_iter(heh); voh_it; ++voh_it) {
-				// Iterate over all outgoing halfedges...
-				bool exists = false;
-				for (int i = 0; i < outerpnts.size(); i++) {
-					if (plane->to_vertex_handle(plane->halfedge_handle(voh_it)) == outerpnts[i]) {
-						exists = true;
-						break;
-					}
-				}
-				if ((plane->is_boundary(plane->to_vertex_handle(voh_it)))
-					&& !exists) {		
-					heh = plane->to_vertex_handle(voh_it);
-					std::cout << plane->point(plane->to_vertex_handle(voh_it))[0] << " " << plane->point(plane->to_vertex_handle(voh_it))[1] << " " << plane->point(plane->to_vertex_handle(voh_it))[2] << std::endl;
-					outerpnts.push_back(heh);
-					break;
-				}
-			}
-		}
-		for (OMT::VIter v_it = plane->vertices_begin(); v_it != plane->vertices_end(); ++v_it) {
-			bool exists = false;
-			for (int i = 0; i < outerpnts.size(); i++) {
-				if (outerpnts[i] == v_it.handle()) {
-					exists = true;
-					break;
-				}
-			}
-			if (!exists)
-				innerpnts.push_back(v_it.handle());
-		}
-		
-	}
-
-	private: void setWeight() {
-		
-		OMT::VHandle firstpnt;
-		OMT::VHandle secondpnt;
-		weights.clear();
-		double cog;
-		for (int i = 0; i < innerpnts.size(); i++) {
-			std::vector<double> circleweight;
-			for (OMT::VVIter vvit = plane->vv_iter(innerpnts[i]); vvit; ++vvit) {
-				bool firstpntset = false;
-				for (OMT::VVIter vvitvvit = plane->vv_iter(vvit); vvitvvit; ++vvitvvit) {
-					for (OMT::VVIter vvcomp = plane->vv_iter(innerpnts[i]); vvcomp; ++vvcomp) {
-						if (mesh->point(vvitvvit.handle()) == mesh->point(vvcomp.handle()) && firstpntset) {
-							secondpnt = vvitvvit.handle();
-							break;
-						}
-						if (mesh->point(vvitvvit.handle()) == mesh->point(vvcomp.handle())) {
-							firstpnt = vvitvvit.handle();
-							firstpntset = true;
-						}
-					}
-				}
-				OMT::Vec3d firstvct = mesh->point(firstpnt) - mesh->point(innerpnts[i]);
-				OMT::Vec3d secondvct = mesh->point(secondpnt) - mesh->point(innerpnts[i]);
-				OMT::Vec3d vvitvct = mesh->point(vvit.handle()) - mesh->point(innerpnts[i]);
-				double weight = (tan((calcAngle(firstvct, vvitvct) / 2) * PI / 180.0) + tan((calcAngle(vvitvct, secondvct) / 2) * PI / 180.0)) / vvitvct.length();
-				circleweight.push_back(weight);
-			}
-			weights.push_back(circleweight);
-		}
-	}
-
-	private: void Parameterize() {
-		int size = 4;
-		double scale = 0;
-		double distance = 0;
-		double currentdist = 0;
-		std::vector<double> oneline;
-		for (int i = 0; i < outerpnts.size(); i++) {
-			distance += sqrt(pow(plane->point(outerpnts[i%outerpnts.size()]).data()[0] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[0], 2) +
-				pow(plane->point(outerpnts[i%outerpnts.size()]).data()[1] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[1], 2) +
-				pow(plane->point(outerpnts[i%outerpnts.size()]).data()[2] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[2], 2));
-		}
-		std::cout << distance << std::endl;
-		scale = distance / size;
-		for (int i = 0; i < outerpnts.size(); i++) {
-			double pntdistance = sqrt(pow(plane->point(outerpnts[i%outerpnts.size()]).data()[0] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[0], 2) +
-				pow(plane->point(outerpnts[i%outerpnts.size()]).data()[1] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[1], 2) +
-				pow(plane->point(outerpnts[i%outerpnts.size()]).data()[2] - plane->point(outerpnts[(i + 1) % outerpnts.size()]).data()[2], 2));
-			currentdist += pntdistance / scale;
-			oneline.push_back(currentdist);
-		}
-
-		// smoothing mesh argv[1] times
-		OMT::Point               cog;
-		plane->remove_property(cogs);
-		plane->add_property(cogs);
-		for (int i = 0; i < outerpnts.size(); i++)
-		{
-			plane->property(cogs, outerpnts[i]).vectorize(0.0f);
-			if (oneline[i] <= 1) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(oneline[i], 0, 0);
-			}
-			else if (oneline[i] <= 2) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(1, oneline[i] - 1, 0);
-			}
-			else if (oneline[i] <= 3) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(1 - (oneline[i] - 2), 1, 0);
-			}
-			else if (oneline[i] <= 4) {
-				plane->property(cogs, outerpnts[i]) = OMT::Point(0, 1 - (oneline[i] - 3), 0);
-			}
-		}
-
-		if (innerpnts.size() > 0) {
-			SparseMatrix<double> A(innerpnts.size(), innerpnts.size());
-			std::vector<VectorXd> B;
-			B.resize(2); //B is 2D
-
-			B[0].resize(innerpnts.size());
-			B[1].resize(innerpnts.size());
-
-			for (int i = 0; i < innerpnts.size(); i++) {
-				for (int j = 0; j < innerpnts.size(); j++) {
-					int k = 0;
-					if (i == j) {
-						double totalweight = 0;
-						for (int w = 0; w < weights[i].size(); w++)
-							totalweight += weights[i][w];
-						A.insert(i, j) = totalweight;
-					}
-					if (i != j) {
-						for (OMT::VVIter vvit = plane->vv_iter(innerpnts[i]); vvit; ++vvit) {
-							if (vvit.handle() == innerpnts[j]) {
-								A.insert(i, j) = weights[i][k] * -1;
-								break;
-							}
-							k++;
-						}
-					}
-				}
-			}
-			A.makeCompressed();
-
-			for (int i = 0; i < innerpnts.size(); i++) {
-				double outerweightx = 0;
-				double outerweighty = 0;
-				for (int j = 0; j < outerpnts.size(); j++) {
-					int k = 0;
-					for (OMT::VVIter vvit = plane->vv_iter(innerpnts[i]); vvit; ++vvit) {
-						if (vvit.handle() == outerpnts[j]) {
-							outerweightx += weights[i][k] * plane->property(cogs, outerpnts[j])[0];
-							outerweighty += weights[i][k] * plane->property(cogs, outerpnts[j])[1];
-							break;
-						}
-						k++;
-					}
-				}
-				B[0][i] = outerweightx;
-				B[1][i] = outerweightx;
-			}
-
-			SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> linearSolver;
-			linearSolver.compute(A);
-
-			std::vector<VectorXd> X;
-			X.resize(2);
-
-			X[0] = linearSolver.solve(B[0]);
-			X[1] = linearSolver.solve(B[1]);
-
-
-			for (int i = 0; i < innerpnts.size(); i++) {
-				plane->property(cogs, innerpnts[i]).vectorize(0.0f);
-				plane->property(cogs, innerpnts[i]) = OMT::Point(X[0][i], X[1][i], 0);
-			}
-		}
-		/*for (v_it = mesh.vertices_begin(); v_it != v_end; ++v_it)
-			if (!mesh.is_boundary(*v_it))
-				mesh.set_point(*v_it, mesh.property(cogs, *v_it));*/
-
-
-
-		
-		/*for (int i = 0; i < outerpnts.size(); i++)
-		{
-			mesh->property(cogs, outerpnts[i]).vectorize(0.0f);
-			if (i == 0)
-				continue;
-			for (vv_it = mesh.vv_iter(*v_it); vv_it; ++vv_it)
-			{
-				mesh.property(cogs, *v_it) += mesh.point(*vv_it);
-			}
-			mesh.property(cogs, *v_it) /= valence;
-		}
-
-		for (v_it = mesh.vertices_begin(); v_it != v_end; ++v_it)
-			if (!mesh.is_boundary(*v_it))
-				mesh.set_point(*v_it, mesh.property(cogs, *v_it));*/
-	}
-	
-	double calcAngle(OMT::Point pnt1, OMT::Point pnt2){
-		return (std::acos(dot(pnt1, pnt2) / (mag(pnt1)*mag(pnt2)))*180)/ 3.1415926535;
-	}
-
-	float dot(OMT::Point a, OMT::Point b)  //calculates dot product of a and b
-	{
-		return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-	}
-
-	float mag(OMT::Point a)  //calculates magnitude of a
-	{
-		return std::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-	}
-
-};
+	};
 }
 
