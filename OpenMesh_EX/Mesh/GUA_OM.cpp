@@ -607,7 +607,23 @@ void Tri_Mesh::RenderTextureOn()
 
 	}
 	//std::cout << "------------" << std::endl;
-	
+	glPushAttrib(GL_LIGHTING_BIT);
+	glDisable(GL_LIGHTING);
+	glLineWidth(1.0);
+	glColor3f(0.0, 0.0, 0.0);
+	glBegin(GL_LINES);
+	for (OMT::EIter e_it = edges_begin(); e_it != edges_end(); ++e_it)
+	{
+		OMT::HEHandle _hedge = halfedge_handle(e_it.handle(), 1);
+
+		OMT::Point curVertex = point(from_vertex_handle(_hedge));
+		glVertex3dv(curVertex.data());
+
+		curVertex = point(to_vertex_handle(_hedge));
+		glVertex3dv(curVertex.data());
+	}
+	glEnd();
+	glPopAttrib();
 
 	
 	
