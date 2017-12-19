@@ -551,6 +551,7 @@ void Tri_Mesh::RenderTextureOn()
 		OMT::Point p[3];
 		OMT::Point t[3];
 		int i = 0;
+		Render_SolidWireframe();
 		if (property(usingtext, f_it.handle()) != "NULL") {
 			glEnable(GL_TEXTURE_2D);
 			glEnable(GL_BLEND);
@@ -577,33 +578,33 @@ void Tri_Mesh::RenderTextureOn()
 				//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
 			}
 			std::cout << std::endl;
-			glTexCoord2d(1 - t[0][0], t[0][1]); glVertex3f(p[0][0], p[0][1], p[0][2]);
-			glTexCoord2d(1 - t[1][0], t[1][1]); glVertex3f(p[1][0], p[1][1], p[1][2]);
-			glTexCoord2d(1 - t[2][0], t[2][1]); glVertex3f(p[2][0], p[2][1], p[2][2]);
+			glTexCoord2d(1 - t[0][0], t[0][1]); glVertex3f(p[0][0] + 0.0001, p[0][1] + 0.0001, p[0][2] + 0.0001);
+			glTexCoord2d(1 - t[1][0], t[1][1]); glVertex3f(p[1][0] + 0.0001, p[1][1] + 0.0001, p[1][2] + 0.0001);
+			glTexCoord2d(1 - t[2][0], t[2][1]); glVertex3f(p[2][0] + 0.0001, p[2][1] + 0.0001, p[2][2] + 0.0001);
 			glEnd();
 			glDisable(GL_BLEND);
 			glDisable(GL_TEXTURE_2D);
 		}
-		else {
-			glColor4f(1.0, 0.96, 0.49, 1.0);
-			glBegin(GL_TRIANGLES);
-			for (OMT::FVIter fv_it = fv_iter(f_it); fv_it; ++fv_it)
-			{
-				//glNormal3dv(normal(fv_it.handle()));
-				for (int j = 0; j < 3; j++) {
-					p[i][j] = point(fv_it.handle()).data()[j];
-				}
-				//glVertex3dv(point(fv_it.handle()).data());
+		//else {
+		//	glColor4f(1.0, 0.96, 0.49, 1.0);
+		//	glBegin(GL_TRIANGLES);
+		//	for (OMT::FVIter fv_it = fv_iter(f_it); fv_it; ++fv_it)
+		//	{
+		//		//glNormal3dv(normal(fv_it.handle()));
+		//		for (int j = 0; j < 3; j++) {
+		//			p[i][j] = point(fv_it.handle()).data()[j];
+		//		}
+		//		//glVertex3dv(point(fv_it.handle()).data());
 
-				i++;
-				//std::cout << p[0] << std::endl;
-				//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
-			}
-			glVertex3f(p[0][0], p[0][1], p[0][2]);
-			glVertex3f(p[1][0], p[1][1], p[1][2]);
-			glVertex3f(p[2][0], p[2][1], p[2][2]);
-			glEnd();
-		}
+		//		i++;
+		//		//std::cout << p[0] << std::endl;
+		//		//std::cout << point(fv_it.handle()).data()[0] << " " << point(fv_it.handle()).data()[1] << " " << point(fv_it.handle()).data()[2] << " " << std::endl;
+		//	}
+		//	glVertex3f(p[0][0], p[0][1], p[0][2]);
+		//	glVertex3f(p[1][0], p[1][1], p[1][2]);
+		//	glVertex3f(p[2][0], p[2][1], p[2][2]);
+		//	glEnd();
+		//}
 
 	}
 	//std::cout << "------------" << std::endl;
