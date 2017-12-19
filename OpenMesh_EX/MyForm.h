@@ -875,6 +875,20 @@ namespace OpenMesh_EX {
 		std::string filename = textureNames[listBox1->SelectedIndex];
 		this->textboxToolStripMenuItem->Text = "¥Ø«etexture: " + openTextureDialog->FileName;
 		std::cout << "selected " << listBox1->SelectedIndex << std::endl;
+
+		for (int i=0;i<faces.size();i++)
+		{
+			for (OMT::FVIter fv_it = mesh->fv_iter(faces[i]); fv_it; ++fv_it) {
+				for (int k = 0; k < mesh->property(mesh->cogs, fv_it.handle()).size(); k++) {
+					if (mesh->property(mesh->cogs, fv_it.handle())[k].texture == mesh->property(mesh->usingtext, faces[i])) {
+						mesh->property(mesh->cogs, fv_it.handle())[k].texture = filename;
+					}
+				}
+			}
+			mesh->property(mesh->usingtext, faces[i]) = filename;
+		}
+		mesh->currenttexture = filename;
+		hkoglPanelControl2->Refresh();
 		hkoglPanelControl3->Refresh();
 	}
 	private: System::Void button6_Click(System::Object^  sender, System::EventArgs^  e) {

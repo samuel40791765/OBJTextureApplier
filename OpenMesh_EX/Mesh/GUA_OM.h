@@ -232,6 +232,10 @@ public:
 
 	}
 	//-------Edit Flag-------//
+	struct texturepoint {
+		std::string texture;
+		OMT::Point pnt;
+	};
 	bool                                       Delete_Flag;
 
 	int                                        Constrain_num;
@@ -248,7 +252,7 @@ public:
 	OpenMesh::FPropHandleT<std::string> usingtext;
 	OpenMesh::FPropHandleT<bool> confirmed;
 	std::string currenttexture;
-
+	OpenMesh::VPropHandleT<std::vector<texturepoint>> cogs;
 	void refreshPlane();
 	void Render_Solid();
 	void setPoint(GLfloat p1, GLfloat p2, GLfloat p3);
@@ -269,11 +273,8 @@ public:
 private:
 	Point clickPoint;
 	std::vector<std::string> textures;
-	struct texturepoint {
-		std::string texture;
-		OMT::Point pnt;
-	};
-	OpenMesh::VPropHandleT<std::vector<texturepoint>> cogs;
+	
+	
 	OpenMesh::VPropHandleT<OMT::VHandle> planetomesh;
 	std::vector<OMT::VHandle> outerpnts;
 	std::vector<OMT::VHandle> innerpnts;

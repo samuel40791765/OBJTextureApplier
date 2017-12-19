@@ -531,6 +531,7 @@ void Tri_Mesh::addTexture(std::string filename)
 }
 	
 
+
 void Tri_Mesh::RenderTextureOn()
 {
 
