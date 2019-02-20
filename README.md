@@ -14,7 +14,7 @@ Continue upon the basic example by applying a coin texture.
 Trying to apply the correct colors to our Bulbasaur.
 ![alt text](https://raw.githubusercontent.com/samuel40791765/OBJTextureApplier/master/projectimages/pic5.png)
 ![alt text](https://raw.githubusercontent.com/samuel40791765/OBJTextureApplier/master/projectimages/pic6.png)
-![alt text](https://raw.githubusercontent.com/samuel40791765/OBJTextureApplier/master/projectimages/pic6.png)
+![alt text](https://raw.githubusercontent.com/samuel40791765/OBJTextureApplier/master/projectimages/pic7.png)
 
 Testing out random textures to our model file.
 ![alt text](https://raw.githubusercontent.com/samuel40791765/OBJTextureApplier/master/projectimages/pic4.png)
